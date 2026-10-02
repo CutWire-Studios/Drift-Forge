@@ -1,0 +1,121 @@
+/*
+ * The design system, verbatim from the brief.
+ *
+ * Light is the bare :root so a page always has a complete palette; dark is
+ * layered on top twice — once for the system preference and once for an
+ * explicit choice — so the toggle wins in both directions.
+ */
+
+:root {
+  --bg-primary: #fafaf9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f4f4f5;
+  --bg-elevated: #ffffff;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-tertiary: #a1a1aa;
+  --accent: #ffc107;
+  --accent-hover: #ffb300;
+  --accent-muted: #ffc10718;
+  --on-accent: #18181b;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+
+  --shadow-rest: 0 1px 3px rgb(0 0 0 / 0.06);
+  --shadow-hover: 0 8px 24px rgb(0 0 0 / 0.08);
+  --shadow-elevated: 0 12px 40px rgb(0 0 0 / 0.12);
+
+  --scrim: rgb(24 24 27 / 0.45);
+  --skeleton: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-primary: #0f0f12;
+    --bg-secondary: #18181c;
+    --bg-tertiary: #222228;
+    --bg-elevated: #2a2a32;
+    --border: #2e2e36;
+    --border-strong: #3f3f4a;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --text-tertiary: #71717a;
+    --accent: #ffc107;
+    --accent-hover: #ffd54f;
+    --accent-muted: #ffc10722;
+    --on-accent: #18181b;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+
+    /* Dark leans on background contrast; a drop shadow there only muddies. */
+    --shadow-rest: none;
+    --shadow-hover: 0 8px 24px rgb(0 0 0 / 0.45);
+    --shadow-elevated: 0 12px 40px rgb(0 0 0 / 0.55);
+
+    --scrim: rgb(0 0 0 / 0.6);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-primary: #0f0f12;
+  --bg-secondary: #18181c;
+  --bg-tertiary: #222228;
+  --bg-elevated: #2a2a32;
+  --border: #2e2e36;
+  --border-strong: #3f3f4a;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --accent: #ffc107;
+  --accent-hover: #ffd54f;
+  --accent-muted: #ffc10722;
+  --on-accent: #18181b;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+
+  --shadow-rest: none;
+  --shadow-hover: 0 8px 24px rgb(0 0 0 / 0.45);
+  --shadow-elevated: 0 12px 40px rgb(0 0 0 / 0.55);
+
+  --scrim: rgb(0 0 0 / 0.6);
+
+  color-scheme: dark;
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 80px;
+
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-search: 16px;
+  --radius-modal: 18px;
+  --radius-pill: 9999px;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 170ms;
+
+  --font: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+
+  --page-max: 1440px;
+  --header-height: 64px;
+}

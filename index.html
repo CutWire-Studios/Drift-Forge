@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="theme-color" content="#0F0F12" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FAFAF9" media="(prefers-color-scheme: light)" />
+    <title>Drift Forge</title>
+    <meta
+      name="description"
+      content="Build your own video effects and transitions for Drift, right in the browser. No code needed."
+    />
+    <script>
+      // Applied before first paint: a stored theme arriving with the app bundle
+      // would repaint the whole page a moment after it was already visible.
+      ;(function () {
+        try {
+          var stored = localStorage.getItem("cw-theme")
+          if (stored === "light" || stored === "dark") {
+            document.documentElement.dataset.theme = stored
+          }
+        } catch (_) {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
