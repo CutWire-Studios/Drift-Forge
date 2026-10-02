@@ -32,12 +32,12 @@ export const config = {
   cfAiToken: env("CF_AI_TOKEN"),
   /** AI Gateway id; empty calls Workers AI directly */
   cfAiGateway: env("CF_AI_GATEWAY", ""),
-  aiModel: env("AI_MODEL", "@cf/google/gemma-4-26b-a4b-it"),
+  aiModel: env("AI_MODEL", "@cf/zai-org/glm-4.7-flash"),
 
   /** Workers AI's free tier is 10,000 neurons per UTC day; stay below it. */
   dailyNeurons: num("DAILY_NEURONS", 9000),
   userDailyNeurons: num("USER_DAILY_NEURONS", 600),
   /** neurons per 1,000 tokens, from the model's published price ($0.011 per 1,000 neurons) */
-  neuronsPerKInput: num("NEURONS_PER_K_INPUT", 9.091),
-  neuronsPerKOutput: num("NEURONS_PER_K_OUTPUT", 27.273),
+  neuronsPerKInput: num("NEURONS_PER_K_INPUT", 5.5),
+  neuronsPerKOutput: num("NEURONS_PER_K_OUTPUT", 36.364),
 }

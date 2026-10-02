@@ -19,7 +19,7 @@ const MAX_BODY = 256 * 1024
 const MAX_PROMPT = 1500
 const MAX_HISTORY = 8
 const MAX_STEPS = 20
-/** Gemma reasons before answering; its reasoning counts against this too. */
+/** The model reasons before answering; its reasoning counts against this too. */
 const MAX_OUTPUT_TOKENS = 2048
 const MAX_REPLY = 600
 const MAX_THINKING = 2000
