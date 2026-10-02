@@ -92,8 +92,19 @@ app.use(
   serveStatic({ root: config.staticDir, onFound: (_p, c) => c.header("Cache-Control", "public, max-age=604800") }),
 )
 app.use("*", serveStatic({ root: config.staticDir }))
-// Client-side routes (/edit/…) all serve the app.
-app.get("*", serveStatic({ path: join(config.staticDir, "index.html"), onFound: (_p, c) => c.header("Cache-Control", "no-cache") }))
+// Client-side routes (/edit/…) all serve the app. Read once: the file only changes with a deploy.
+const indexHtml = (() => {
+  try {
+    return readFileSync(join(config.staticDir, "index.html"), "utf8")
+  } catch {
+    return null
+  }
+})()
+app.get("*", (c) => {
+  if (!indexHtml) return c.notFound()
+  c.header("Cache-Control", "no-cache")
+  return c.html(indexHtml)
+})
 
 // PID 1 in the container: exit promptly on stop, closing the database cleanly.
 for (const signal of ["SIGTERM", "SIGINT"] as const) {
