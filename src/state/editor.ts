@@ -34,7 +34,7 @@ interface EditorState {
   /** Returns why the input can't be exposed, or null once it is. */
   expose(node: string, input: string): string | null
   unexpose(node: string, input: string): void
-  /** Exposes a curve, gradient, picture or region option (next Drift only). */
+  /** Exposes a curve, gradient, picture or region option. */
   exposeOption(node: string, option: string): string | null
   unexposeOption(node: string, option: string): void
   addParam(p: ParamDef): void
@@ -42,7 +42,6 @@ interface EditorState {
   removeParam(identifier: string): void
   moveParam(identifier: string, delta: number): void
   addAsset(a: ForgeAsset): void
-  setTarget(target: "current" | "next"): void
   savePreset(name: string): void
   applyPreset(name: string): void
   deletePreset(name: string): void
@@ -146,7 +145,6 @@ export const useEditor = create<EditorState>()(
         removeParam: (identifier) => put(ops.removeParam(doc(), identifier)),
         moveParam: (identifier, delta) => put(ops.moveParam(doc(), identifier, delta)),
         addAsset: (a) => put(ops.addAsset(doc(), a)),
-        setTarget: (target) => put(ops.setTarget(doc(), target)),
         savePreset: (name) => put(ops.savePreset(doc(), name, get().paramValues)),
         applyPreset: (name) => {
           const pr = get().doc?.presets?.find((p) => p.name === name)

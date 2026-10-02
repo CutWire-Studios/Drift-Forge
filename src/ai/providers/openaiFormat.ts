@@ -1,4 +1,4 @@
-import type { AgentMessage, ModelReply, ToolCall } from "../agent"
+import type { AgentMessage, Delta, ModelReply, ToolCall } from "../agent"
 import type { ToolSpec } from "../tools"
 
 /** Chat-completions message list (OpenAI, OpenAI-compatible servers, Workers AI). */
@@ -42,7 +42,83 @@ interface ChatCompletion {
       tool_calls?: { id?: string; function?: { name?: string; arguments?: string | object } }[]
     }
   }[]
-  usage?: { prompt_tokens?: number; completion_tokens?: number; neurons?: number }
+  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; neurons?: number }
+}
+
+interface ChunkCall {
+  index?: number
+  id?: string
+  function?: { name?: string; arguments?: string | object }
+}
+
+/**
+ * Reads a chat-completions answer, streamed (server-sent events) or not, passing reasoning and
+ * reply text to `onDelta` as it arrives, and returns it in the non-streamed shape.
+ */
+export async function readChatResponse(res: Response, onDelta?: (d: Delta) => void): Promise<ChatCompletion> {
+  if (!res.headers.get("content-type")?.includes("event-stream") || !res.body) {
+    const body = (await res.json()) as ChatCompletion & { result?: ChatCompletion }
+    return body.result ?? body
+  }
+  let content = ""
+  let reasoning = ""
+  const calls: { id?: string; name?: string; args: string }[] = []
+  let usage: ChatCompletion["usage"]
+  const handle = (data: string) => {
+    let c: { choices?: { delta?: Record<string, unknown> }[]; usage?: ChatCompletion["usage"] }
+    try {
+      c = JSON.parse(data)
+    } catch {
+      return
+    }
+    // Some servers send running increments as well as the total; the total is the largest.
+    if (c.usage && (c.usage.total_tokens ?? 0) >= (usage?.total_tokens ?? 0)) usage = c.usage
+    const d = c.choices?.[0]?.delta
+    if (!d) return
+    // Workers AI sends the same reasoning under both names.
+    const r = (d.reasoning_content ?? d.reasoning) as string | null | undefined
+    if (r) {
+      reasoning += r
+      onDelta?.({ channel: "thinking", text: r })
+    }
+    if (typeof d.content === "string" && d.content) {
+      content += d.content
+      onDelta?.({ channel: "text", text: d.content })
+    }
+    for (const t of (d.tool_calls as ChunkCall[] | undefined) ?? []) {
+      const cur = (calls[t.index ?? calls.length] ??= { args: "" })
+      if (t.id) cur.id = t.id
+      if (t.function?.name && !cur.name) cur.name = t.function.name
+      const a = t.function?.arguments
+      if (a && typeof a === "object") cur.args = JSON.stringify(a)
+      else if (a) cur.args += a
+    }
+  }
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
+  let buf = ""
+  for (;;) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buf += value
+    let nl: number
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim()
+      buf = buf.slice(nl + 1)
+      if (line.startsWith("data:") && line !== "data: [DONE]") handle(line.slice(5).trim())
+    }
+  }
+  return {
+    choices: [
+      {
+        message: {
+          content,
+          reasoning,
+          tool_calls: calls.filter(Boolean).map((c) => ({ id: c.id, function: { name: c.name, arguments: c.args } })),
+        },
+      },
+    ],
+    usage,
+  }
 }
 
 function parseArgs(a: unknown): Record<string, unknown> {

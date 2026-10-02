@@ -62,7 +62,6 @@ export function Palette({ kind }: { kind: Kind }) {
                       >
                         <strong>
                           {d.label}
-                          {d.next && <span className="pill next-pill">Next</span>}
                         </strong>
                         <span>{d.description}</span>
                       </button>

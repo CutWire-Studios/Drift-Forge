@@ -1,7 +1,7 @@
 # Next-Drift parameters
 
-Drift Forge can export controls that today's Drift doesn't understand, behind the **Next Drift**
-switch (Details tab). This file is the contract for implementing them in Drift
+Drift Forge exports controls that today's Drift doesn't understand whenever an effect uses them
+(there is no switch: every control and block is always available). This file is the contract for implementing them in Drift
 (`GpuPackageParse`, `setPackageUniforms`/`runPipeline` in `GlRuntime.cpp`, and the inspector).
 
 Today's Drift refuses these packages, because an unknown parameter `type` is a parse error

@@ -70,8 +70,8 @@ effects/<id>/tex0.png …         images referenced by pipeline.textures
 effects/<id>/forge.json         the Drift Forge source document; Drift can ignore it
 ```
 
-`effect.json` / `transition.json` follow `GpuPackageParse` exactly. Packages made with the
-**Next Drift** switch add parameter types and a top-level `nextFeatures` list described in
+`effect.json` / `transition.json` follow `GpuPackageParse` exactly. Packages that use the newer
+controls or blocks add parameter types and a top-level `nextFeatures` list described in
 `drift-next-params.md`; the always-safe extras (`ui`, `showWhen`, `presets`) appear in every export. Shaders are `#version 330 core`, declare no precision, and only use engine uniforms Drift
 binds (`u_currentTexture`, `u_textureN`, `u_resolution`, `u_time` for effects, `u_progress` for
 transitions). Every intermediate buffer has `scale: 1.0`.

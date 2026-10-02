@@ -124,8 +124,6 @@ export interface ForgeDoc {
   nodes: ForgeNode[]
   edges: ForgeEdge[]
   assets: ForgeAsset[]
-  /** "next" unlocks controls only the next Drift can read; today's Drift refuses those packages. */
-  target?: "current" | "next"
   presets?: Preset[]
   preview: {
     /** seconds into the clip the effect thumbnail is rendered at */

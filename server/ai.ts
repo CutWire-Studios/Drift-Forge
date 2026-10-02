@@ -7,7 +7,7 @@
 // model's (capped) reasoning, tool progress, at most a short reply, and the graph.
 import { Hono } from "hono"
 import { runAgent, StopRun, type AgentEvent, type ChatTurn, type ModelAdapter } from "@/ai/agent"
-import { fromOpenAI, toOpenAIMessages, toOpenAITools } from "@/ai/providers/openaiFormat"
+import { fromOpenAI, readChatResponse, toOpenAIMessages, toOpenAITools } from "@/ai/providers/openaiFormat"
 import type { ForgeDoc } from "@/doc/types"
 import { parseForgeDoc } from "@/export/link"
 import type { Auth } from "./auth"
@@ -30,7 +30,7 @@ function workersAi(): ModelAdapter {
     ? `https://gateway.ai.cloudflare.com/v1/${config.cfAccountId}/${config.cfAiGateway}/workers-ai`
     : `https://api.cloudflare.com/client/v4/accounts/${config.cfAccountId}/ai/run`
   return {
-    async complete({ system, messages, tools }) {
+    async complete({ system, messages, tools, onDelta }) {
       const res = await fetch(`${base}/${config.aiModel}`, {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${config.cfAiToken}` },
@@ -40,12 +40,13 @@ function workersAi(): ModelAdapter {
           tool_choice: "auto",
           max_completion_tokens: MAX_OUTPUT_TOKENS,
           temperature: 0.2,
+          stream: true,
+          stream_options: { include_usage: true },
         }),
         signal: AbortSignal.timeout(90_000),
       })
       if (!res.ok) throw new Error(`Workers AI answered ${res.status}: ${(await res.text()).slice(0, 300)}`)
-      const body = (await res.json()) as { result?: unknown }
-      return fromOpenAI((body.result ?? body) as Parameters<typeof fromOpenAI>[0])
+      return fromOpenAI(await readChatResponse(res, onDelta))
     },
   }
 }

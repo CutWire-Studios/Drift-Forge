@@ -51,7 +51,7 @@ export type OptionDef =
   | { id: string; label: string; kind: "number"; default: number; min: number; max: number; step?: number }
   | { id: string; label: string; kind: "code"; default: string }
   | { id: string; label: string; kind: "labels"; default: string[] }
-  // The kinds below can be exposed to Drift (next Drift only) by storing a ParamRef in node.data.
+  // The kinds below can be exposed to Drift by storing a ParamRef in node.data.
   | { id: string; label: string; kind: "curve"; default: CurvePoint[] }
   | { id: string; label: string; kind: "gradient"; default: GradientStop[] }
   | { id: string; label: string; kind: "region"; default: [number, number, number, number] }
@@ -119,7 +119,7 @@ export interface NodeDef {
   options?: OptionDef[]
   /** Restricts the node to one document kind. */
   kinds?: Kind[]
-  /** Only exports for the next Drift (see ForgeDoc.target). */
+  /** Listed in the package's nextFeatures: Drift versions that can't run it refuse the package. */
   next?: boolean
   /** Cheap to call many times (raw texture reads, constants): never worth a buffer of its own. */
   cheap?: boolean

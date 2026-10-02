@@ -1681,16 +1681,7 @@ select.input {
   color: var(--danger);
 }
 
-/* Next-Drift controls ------------------------------------------------------ */
-
-.next-pill {
-  margin-left: 6px;
-  padding: 1px 7px;
-  background: color-mix(in srgb, #818cf8 22%, transparent);
-  color: color-mix(in srgb, #818cf8 80%, var(--text-primary));
-  font-size: 10.5px;
-  vertical-align: 1px;
-}
+/* Controls ------------------------------------------------------------------ */
 
 .mini-btn {
   display: grid;
@@ -1814,17 +1805,6 @@ select.input {
 .preset-name {
   flex: 1;
   width: auto;
-}
-
-.target-box {
-  padding: var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-}
-
-.target-box.on {
-  border-color: color-mix(in srgb, #818cf8 60%, transparent);
-  background: color-mix(in srgb, #818cf8 8%, transparent);
 }
 
 .source-picker .btn {

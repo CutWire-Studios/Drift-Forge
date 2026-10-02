@@ -1,4 +1,4 @@
-import { isParamRef, NEXT_PARAM_TYPES, type ForgeDoc, type ParamDef } from "@/doc/types"
+import { isParamRef, type ForgeDoc } from "@/doc/types"
 import { availableFor, nodeDef } from "@/nodes/registry"
 import { GLSL_RESERVED } from "./glsl"
 
@@ -21,14 +21,6 @@ export function paramNameProblem(name: string): string | null {
   return null
 }
 
-export const NEXT_HINT = "Turn on “Next Drift” in Details to use it."
-
-/** Why this parameter needs the next Drift, or null if today's Drift reads it. */
-export function nextOnlyReason(p: ParamDef): string | null {
-  if (NEXT_PARAM_TYPES.includes(p.type)) return `“${p.displayName}” is a ${p.type} control, which only the next Drift understands.`
-  if (p.type === "color" && p.alpha) return `“${p.displayName}” keeps transparency, which only the next Drift understands.`
-  return null
-}
 
 export function validate(doc: ForgeDoc, opts: { requireOutput: boolean }): CompileError[] {
   const errors: CompileError[] = []
@@ -85,10 +77,6 @@ export function validate(doc: ForgeDoc, opts: { requireOutput: boolean }): Compi
     if (p.type === "color" && !(p.alpha ? /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/ : /^#[0-9a-fA-F]{6}$/).test(String(p.default))) {
       errors.push({ param: p.identifier, message: `Slider "${p.displayName}" needs a #rrggbb colour.` })
     }
-    if (doc.target !== "next") {
-      const why = nextOnlyReason(p)
-      if (why) errors.push({ param: p.identifier, message: `${why} ${NEXT_HINT}` })
-    }
     if (p.type === "choice" && !(p.options && p.options.length >= 2)) {
       errors.push({ param: p.identifier, message: `Dropdown "${p.displayName}" needs at least two choices.` })
     }
@@ -104,10 +92,6 @@ export function validate(doc: ForgeDoc, opts: { requireOutput: boolean }): Compi
   }
 
   for (const n of doc.nodes) {
-    const def = nodeDef(n.type)
-    if (def?.next && doc.target !== "next") {
-      errors.push({ node: n.id, message: `${def.label} only works in the next Drift. ${NEXT_HINT}` })
-    }
     for (const v of Object.values(n.data)) {
       if (isParamRef(v) && !Array.isArray(v.param) && !names.has(v.param)) {
         errors.push({ node: n.id, message: `Uses a slider "${v.param}" that no longer exists.` })

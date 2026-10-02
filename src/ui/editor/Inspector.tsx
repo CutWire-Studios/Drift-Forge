@@ -3,7 +3,6 @@ import { paramNameProblem } from "@/compiler/validate"
 import {
   EFFECT_CATEGORIES,
   isParamRef,
-  NEXT_PARAM_TYPES,
   TRANSITION_CATEGORIES,
   type ForgeDoc,
   type ForgeNode,
@@ -117,7 +116,6 @@ function NodeDetails({ node }: { node: ForgeNode }) {
     <div className="node-details">
       <div className="nd-head" style={{ "--cat": categoryColor(def.category) } as React.CSSProperties}>
         <span className="pill">{cat?.label}</span>
-        {def.next && <span className="pill next-pill">Next Drift</span>}
         <h3>{def.label}</h3>
         <p className="meta">{def.description}</p>
       </div>
@@ -183,7 +181,6 @@ function NodeDetails({ node }: { node: ForgeNode }) {
 /** Expose / exposed-chip row for curve, gradient, picture and region options. */
 function OptionExpose({ node, option }: { node: ForgeNode; option: OptionDef }) {
   const params = useEditor((s) => s.doc!.params)
-  const next = useEditor((s) => s.doc!.target === "next")
   const { exposeOption, unexposeOption } = useEditor.getState()
   const v = node.data[option.id]
   if (isParamRef(v) && !Array.isArray(v.param)) {
@@ -202,7 +199,7 @@ function OptionExpose({ node, option }: { node: ForgeNode; option: OptionDef }) 
     <button
       type="button"
       className="expose-btn"
-      title={next ? "Let people change this in Drift" : "Needs the next Drift: turn it on in Details"}
+      title="Let people change this in Drift"
       onClick={() => {
         const err = exposeOption(node.id, option.id)
         if (err) toast(err, "error")
@@ -417,7 +414,6 @@ function SlidersTab() {
           <div className="slider-head">
             <span>
               {p.displayName}
-              {(NEXT_PARAM_TYPES.includes(p.type) || p.alpha) && <span className="pill next-pill">Next Drift</span>}
             </span>
             <button
               type="button"
@@ -553,7 +549,6 @@ function ParamEditor({ p, index, count, onRenamed }: { p: ParamDef; index: numbe
   const [ident, setIdent] = useState(p.identifier)
   const [err, setErr] = useState<string | null>(null)
   const switches = doc.params.filter((q) => q.type === "bool" && q.identifier !== p.identifier)
-  const next = doc.target === "next"
 
   return (
     <div className="param-editor">
@@ -631,7 +626,7 @@ function ParamEditor({ p, index, count, onRenamed }: { p: ParamDef; index: numbe
       )}
       {p.type === "color" && (
         <div className="field-inline">
-          <span>Allow transparency {!next && <span className="pill next-pill">Next Drift</span>}</span>
+          <span>Allow transparency</span>
           <Toggle
             value={!!p.alpha}
             onChange={(on) =>
@@ -716,11 +711,9 @@ function ParamEditor({ p, index, count, onRenamed }: { p: ParamDef; index: numbe
 function InfoTab() {
   const doc = useEditor((s) => s.doc!)
   const update = useEditor((s) => s.update)
-  const setTarget = useEditor((s) => s.setTarget)
   const set = (patch: Partial<ForgeDoc["meta"]>) => update((d) => void Object.assign(d.meta, patch))
   const cats = doc.kind === "effect" ? EFFECT_CATEGORIES : TRANSITION_CATEGORIES
   const idOk = /^[a-z0-9][a-z0-9_.]*$/.test(doc.meta.id)
-  const next = doc.target === "next"
 
   return (
     <div className="stack gap-3">
@@ -767,19 +760,6 @@ function InfoTab() {
           />
         </label>
       )}
-      <div className={`target-box${next ? " on" : ""}`}>
-        <div className="field-inline">
-          <span>
-            <b>Next Drift</b> controls
-          </span>
-          <Toggle value={next} onChange={(on) => setTarget(on ? "next" : "current")} label="Next Drift" />
-        </div>
-        <p className="meta small">
-          Unlocks points, dropdowns, whole numbers, pictures, other clips, regions, gradients, curves, random seeds,
-          see-through colours and the Music block. Today's Drift can't open {doc.kind}s that use them; they're for the next
-          Drift update.
-        </p>
-      </div>
       <details className="advanced">
         <summary>Advanced</summary>
         <label className="field">

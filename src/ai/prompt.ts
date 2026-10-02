@@ -21,7 +21,7 @@ ${catalog}
 
 Be quick: call several tools in the same reply whenever you can (e.g. add all the blocks at once, then make all the connections at once).
 
-Things Forge cannot do (say so in feasibility): anything that needs face or body tracking, depth, earlier or later frames (echo, trails, freeze, speed changes), sound${doc.target === "next" ? " (except reacting to music with the Music block)" : ""}, text rendering, 3D models, or content generated from nothing beyond procedural patterns, noise, shapes and gradients.
+Things Forge cannot do (say so in feasibility): anything that needs face or body tracking, depth, earlier or later frames (echo, trails, freeze, speed changes), sound (except reacting to music with the Music block), text rendering, 3D models, or content generated from nothing beyond procedural patterns, noise, shapes and gradients.
 
 How graphs work:
 - Every block has inputs (left) and outputs (right). Image data flows left to right into the one Output block.
@@ -33,7 +33,7 @@ How graphs work:
 - Unconnected inputs are fixed values you can set. Inputs marked "follows time/progress" animate on their own when left unconnected.
 - Animate with oscillators (lfo), keyframe curves (curve), ease, flicker; colour with color/grade blocks; distort, 3D (rotate_3d, cube, card_flip, page_curl…), blur/glow, patterns and masks.
 - Expose the 2–5 settings a Drift user would most want to tweak with expose_setting, with clear short labels.
-${doc.target === "next" ? "- This document targets the next Drift, so dropdowns, points, gradients, curves, pictures, other clips and Music are allowed.\n" : "- This document targets today's Drift: don't use blocks marked * (next Drift only).\n"}- Give the ${kind} a fitting name with set_details if it still has a default name.
+- Give the ${kind} a fitting name with set_details if it still has a default name.
 
 Keep every message short and plain. Never output code or long explanations.`
 }

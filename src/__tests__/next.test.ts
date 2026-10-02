@@ -16,29 +16,8 @@ function load(doc: ForgeDoc) {
 const doc = () => useEditor.getState().doc!
 const node = (type: string) => doc().nodes.find((n) => n.type === type)!
 
-describe("exposing for today's Drift", () => {
+describe("package extras", () => {
   beforeEach(() => load(chain("effect", ["twirl", "kaleidoscope"])))
-
-  it("splits a point into X/Y sliders and keeps counts as floats with a step hint", () => {
-    const s = useEditor.getState()
-    expect(s.expose(node("twirl").id, "center")).toBeNull()
-    expect(s.expose(node("kaleidoscope").id, "segments")).toBeNull()
-    expect(doc().params.map((p) => [p.identifier, p.type])).toEqual([
-      ["centreX", "float"],
-      ["centreY", "float"],
-      ["slices", "float"],
-    ])
-    expect(doc().params[2].ui).toEqual({ step: 1 })
-    expect(compile(doc(), { mode: "export" }).ok).toBe(true)
-  })
-
-  it("refuses dropdowns and option controls", () => {
-    const s = useEditor.getState()
-    const id = s.addNode("choice", 0, 0)
-    expect(s.expose(id, "value")).toMatch(/next Drift/)
-    const c = s.addNode("curve", 0, 0)
-    expect(useEditor.getState().exposeOption(c, "points")).toMatch(/next Drift/)
-  })
 
   it("writes hints, show-when and presets, which today's Drift ignores", () => {
     const s = useEditor.getState()
@@ -55,10 +34,9 @@ describe("exposing for today's Drift", () => {
   })
 })
 
-describe("next Drift", () => {
+describe("controls", () => {
   beforeEach(() => {
     const d = chain("effect", ["twirl", "kaleidoscope", "gradient_ramp"])
-    d.target = "next"
     load(d)
   })
 
@@ -106,16 +84,6 @@ describe("next Drift", () => {
     expect(doc().params).toMatchObject([{ identifier: "otherClip", type: "clip" }])
     useEditor.getState().removeNodes([id])
     expect(doc().params).toEqual([])
-  })
-
-  it("is refused once switched back to today's Drift", () => {
-    const s = useEditor.getState()
-    s.expose(node("twirl").id, "center")
-    s.addNode("audio", 0, 0)
-    useEditor.getState().setTarget("current")
-    const errors = compile(doc(), { mode: "export" }).errors.map((e) => e.message)
-    expect(errors.some((m) => /point control/.test(m))).toBe(true)
-    expect(errors.some((m) => /Music only works in the next Drift/.test(m))).toBe(true)
   })
 
   it("renames a parameter everywhere it's referenced", () => {

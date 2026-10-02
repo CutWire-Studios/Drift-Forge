@@ -239,7 +239,6 @@ export function expose(doc: ForgeDoc, nodeId: string, inputId: string, labelOver
   if (!node || !def || !input || input.noExpose) return { error: "That setting can't be a slider." }
   const cur = node.inputs[inputId] ?? input.default
   if (isParamRef(cur)) return { doc, params: Array.isArray(cur.param) ? cur.param : [cur.param] }
-  const next = doc.target === "next"
   const label = (labelOverride ?? input.label).replace(/\s*\(.*?\)/, "")
   const ui = uiFor(input)
   const base = { min: input.min ?? 0, max: input.max ?? 1, ...(ui ? { ui } : {}) }
@@ -259,21 +258,15 @@ export function expose(doc: ForgeDoc, nodeId: string, inputId: string, labelOver
     ref = { param: one({ type: "color", min: 0, max: 1, default: rgbToHex(c) }) }
   } else if (input.type === "vec2") {
     const v = (Array.isArray(cur) ? cur : [num, num]) as [number, number]
-    if (next) ref = { param: one({ type: "point", ...base, default: [v[0], v[1]] }) }
-    else {
-      ref = {
-        param: [one({ type: "float", ...base, default: v[0] }, `${label} X`), one({ type: "float", ...base, default: v[1] }, `${label} Y`)],
-      }
-    }
+    ref = { param: one({ type: "point", ...base, default: [v[0], v[1]] }) }
   } else if (input.widget === "toggle") {
     ref = { param: one({ type: "bool", min: 0, max: 1, default: num > 0.5 }) }
   } else if (input.widget === "choice") {
-    if (!next) return { error: "Dropdowns need the next Drift. Turn on “Next Drift” in Details." }
     const labels = (node.data.labels as string[] | undefined) ?? []
     ref = { param: one({ type: "choice", min: 0, max: Math.max(labels.length - 1, 1), options: [...labels], default: Math.round(num) }) }
   } else if (input.widget === "seed") {
-    ref = { param: one({ type: next ? "seed" : "float", ...base, default: Math.round(num) }) }
-  } else if (input.integer && next) {
+    ref = { param: one({ type: "seed", ...base, default: Math.round(num) }) }
+  } else if (input.integer) {
     ref = { param: one({ type: "int", ...base, default: Math.round(num) }) }
   } else {
     ref = { param: one({ type: "float", ...base, default: num }) }
@@ -303,12 +296,11 @@ export function unexpose(doc: ForgeDoc, nodeId: string, inputId: string): ForgeD
   })
 }
 
-/** Exposes a curve, gradient, picture or region option (next Drift only). */
+/** Exposes a curve, gradient, picture or region option. */
 export function exposeOption(doc: ForgeDoc, nodeId: string, optionId: string): OpResult<{ param: string }> {
   const node = doc.nodes.find((n) => n.id === nodeId)
   const option = node && nodeDef(node.type)?.options?.find((o) => o.id === optionId)
   if (!node || !option || !optionExposable(option)) return { error: "That setting can't be a slider." }
-  if (doc.target !== "next") return { error: "This kind of control needs the next Drift. Turn on “Next Drift” in Details." }
   const cur = node.data[optionId] ?? ("default" in option ? option.default : undefined)
   if (isParamRef(cur) && !Array.isArray(cur.param)) return { doc, param: cur.param }
   const label = option.label
@@ -404,12 +396,6 @@ export function moveParam(doc: ForgeDoc, identifier: string, delta: number): For
 export function addAsset(doc: ForgeDoc, a: ForgeAsset): ForgeDoc {
   return edit(doc, (d) => {
     d.assets.push(a)
-  })
-}
-
-export function setTarget(doc: ForgeDoc, target: "current" | "next"): ForgeDoc {
-  return edit(doc, (d) => {
-    d.target = target
   })
 }
 

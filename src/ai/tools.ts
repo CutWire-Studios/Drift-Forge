@@ -172,7 +172,7 @@ export function describeBlock(def: NodeDef): string {
 }
 
 export function viewGraph(doc: ForgeDoc): string {
-  const lines = [`${doc.kind} "${doc.meta.displayName}" (${doc.target === "next" ? "next Drift" : "today's Drift"})`]
+  const lines = [`${doc.kind} "${doc.meta.displayName}"`]
   for (const n of doc.nodes) {
     const def = nodeDef(n.type)
     if (!def) continue
@@ -305,10 +305,10 @@ export function runTool(doc: ForgeDoc, name: string, args: Record<string, unknow
           doc,
           result: CATEGORIES.map((c) => {
             const items = defs.filter((d) => d.category === c.id)
-            return items.length ? `${c.id}: ${items.map((d) => `${d.type}${d.next ? "*" : ""}`).join(", ")}` : ""
+            return items.length ? `${c.id}: ${items.map((d) => d.type).join(", ")}` : ""
           })
             .filter(Boolean)
-            .join("\n") + (defs.some((d) => d.next) ? "\n(* = next Drift only)" : ""),
+            .join("\n"),
         }
       }
       case "describe_block": {

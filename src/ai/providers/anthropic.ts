@@ -32,8 +32,8 @@ function toMessages(messages: AgentMessage[]): Anthropic.MessageParam[] {
 export function anthropicAdapter(opts: { apiKey: string; model: string }): ModelAdapter {
   const client = new Anthropic({ apiKey: opts.apiKey, dangerouslyAllowBrowser: true })
   return {
-    async complete({ system, messages, tools }) {
-      const response = await client.messages.create({
+    async complete({ system, messages, tools, onDelta }) {
+      const stream = client.messages.stream({
         model: opts.model,
         max_tokens: 16000,
         // Summarised reasoning to show in the panel. Haiku 4.5 predates adaptive thinking and
@@ -45,6 +45,11 @@ export function anthropicAdapter(opts: { apiKey: string; model: string }): Model
         tools: tools.map((t) => ({ name: t.name, description: t.description, input_schema: t.parameters as Anthropic.Tool.InputSchema })),
         messages: toMessages(messages),
       })
+      if (onDelta) {
+        stream.on("thinking", (text) => onDelta({ channel: "thinking", text }))
+        stream.on("text", (text) => onDelta({ channel: "text", text }))
+      }
+      const response = await stream.finalMessage()
       if (response.stop_reason === "refusal") {
         throw new Error("The model declined this request.")
       }

@@ -25,8 +25,14 @@ export interface ModelReply {
   usage?: { input: number; output: number; neurons?: number }
 }
 
+/** A piece of the model's reasoning or reply, as it's written. */
+export interface Delta {
+  channel: "thinking" | "text"
+  text: string
+}
+
 export interface ModelAdapter {
-  complete(req: { system: string; messages: AgentMessage[]; tools: ToolSpec[] }): Promise<ModelReply>
+  complete(req: { system: string; messages: AgentMessage[]; tools: ToolSpec[]; onDelta?: (d: Delta) => void }): Promise<ModelReply>
 }
 
 /** A previous exchange shown to the model as plain text (never tool calls). */
@@ -52,6 +58,7 @@ export interface Plan {
 export type Pending = { kind: "questions"; questions: Question[] } | { kind: "plan"; plan: Plan }
 
 export type AgentEvent =
+  | { type: "delta"; channel: Delta["channel"]; text: string }
   | { type: "thinking"; text: string }
   | { type: "text"; text: string }
   | { type: "tool"; name: string; result: string; error?: boolean }
@@ -153,14 +160,27 @@ export async function runAgent(o: AgentOptions): Promise<AgentRun> {
       stopped = e.message
       break
     }
-    const res = await o.adapter.complete({ system: systemPrompt(doc), messages, tools: AGENT_TOOLS })
+    // Stream what the model writes, within the same caps as the finished step.
+    const shown = { thinking: 0, text: 0 }
+    const cap = { thinking: limits.thinking, text: limits.text }
+    const onDelta = o.onEvent
+      ? (d: Delta) => {
+          const room = cap[d.channel] - shown[d.channel]
+          if (room <= 0 || !d.text) return
+          const text = d.text.slice(0, room)
+          shown[d.channel] += text.length
+          o.onEvent!({ type: "delta", channel: d.channel, text })
+        }
+      : undefined
+    const res = await o.adapter.complete({ system: systemPrompt(doc), messages, tools: AGENT_TOOLS, onDelta })
     if (res.usage) {
       usage.input += res.usage.input
       usage.output += res.usage.output
     }
     await o.afterCall?.(res)
-    if (res.thinking?.trim()) o.onEvent?.({ type: "thinking", text: res.thinking.trim().slice(0, limits.thinking) })
-    if (res.text.trim() && res.calls.length) o.onEvent?.({ type: "text", text: res.text.trim().slice(0, limits.text) })
+    // Providers that don't stream deliver it all at once here instead.
+    if (res.thinking?.trim() && !shown.thinking) o.onEvent?.({ type: "thinking", text: res.thinking.trim().slice(0, limits.thinking) })
+    if (res.text.trim() && res.calls.length && !shown.text) o.onEvent?.({ type: "text", text: res.text.trim().slice(0, limits.text) })
     messages.push({ role: "assistant", text: res.text, calls: res.calls, raw: res.raw })
     if (!res.calls.length) {
       reply = res.text

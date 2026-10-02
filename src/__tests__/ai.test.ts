@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { runAgent, type ModelAdapter, type ModelReply, type ToolCall } from "@/ai/agent"
-import { fromOpenAI } from "@/ai/providers/openaiFormat"
+import { runAgent, type AgentEvent, type ModelAdapter, type ModelReply, type ToolCall } from "@/ai/agent"
+import { fromOpenAI, readChatResponse } from "@/ai/providers/openaiFormat"
 import { runTool, viewGraph } from "@/ai/tools"
 import { compile } from "@/compiler/compile"
 import { emptyDoc } from "@/doc/util"
@@ -151,5 +151,49 @@ describe("model replies", () => {
     const r = runTool(blank("effect"), "describe_block", { types: ["wave", "nope"] })
     expect(r.result).toContain("wave")
     expect(r.result).toContain('No block type "nope"')
+  })
+})
+
+describe("streaming", () => {
+  const sse = (chunks: unknown[]) =>
+    new Response(chunks.map((c) => `data: ${JSON.stringify(c)}\n\n`).join("") + "data: [DONE]\n\n", {
+      headers: { "content-type": "text/event-stream" },
+    })
+
+  it("reads a streamed answer: reasoning once, split tool arguments, the total usage", async () => {
+    const deltas: string[] = []
+    const res = await readChatResponse(
+      sse([
+        { choices: [{ delta: { role: "assistant", content: "" } }], usage: { prompt_tokens: 164, completion_tokens: 0, total_tokens: 164 } },
+        { choices: [{ delta: { reasoning: "Add ", reasoning_content: "Add " } }], usage: { total_tokens: 1 } },
+        { choices: [{ delta: { reasoning: "glow.", reasoning_content: null } }] },
+        { choices: [{ delta: { tool_calls: [{ index: 0, id: "t1", function: { name: "add_block", arguments: '{"type":' } }] } }] },
+        { choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: ' "glow"}' } }] } }] },
+        { response: "", usage: { prompt_tokens: 164, completion_tokens: 80, total_tokens: 244, neurons: 3.8 } },
+      ]),
+      (d) => deltas.push(`${d.channel}:${d.text}`),
+    )
+    const r = fromOpenAI(res)
+    expect(deltas).toEqual(["thinking:Add ", "thinking:glow."])
+    expect(r.thinking).toBe("Add glow.")
+    expect(r.calls).toMatchObject([{ id: "t1", name: "add_block", args: { type: "glow" } }])
+    expect(r.usage).toEqual({ input: 164, output: 80, neurons: 3.8 })
+  })
+
+  it("caps what streams to the limits of a finished step", async () => {
+    const adapter: ModelAdapter = {
+      complete: async ({ onDelta }) => {
+        for (let i = 0; i < 10; i++) onDelta?.({ channel: "thinking", text: "abcdef" })
+        onDelta?.({ channel: "text", text: "x".repeat(50) })
+        return { text: "x".repeat(50), thinking: "abcdef".repeat(10), calls: [] }
+      },
+    }
+    const events: AgentEvent[] = []
+    const run = await runAgent({ adapter, doc: blank("effect"), prompt: "hi", limits: { thinking: 20, text: 30 }, onEvent: (e) => events.push(e) })
+    const streamed = (ch: string) => events.filter((e) => e.type === "delta" && e.channel === ch).map((e) => (e as { text: string }).text).join("")
+    expect(streamed("thinking")).toBe("abcdef".repeat(10).slice(0, 20))
+    expect(streamed("text")).toHaveLength(30)
+    expect(events.some((e) => e.type === "thinking")).toBe(false)
+    expect(run.reply).toHaveLength(30)
   })
 })

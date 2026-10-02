@@ -1,5 +1,5 @@
 import type { ModelAdapter } from "../agent"
-import { fromOpenAI, toOpenAIMessages, toOpenAITools } from "./openaiFormat"
+import { fromOpenAI, readChatResponse, toOpenAIMessages, toOpenAITools } from "./openaiFormat"
 
 export const OPENAI_URL = "https://api.openai.com/v1"
 
@@ -10,7 +10,7 @@ export const OPENAI_URL = "https://api.openai.com/v1"
 export function openAIAdapter(opts: { baseUrl: string; apiKey?: string; model: string }): ModelAdapter {
   const url = `${opts.baseUrl.replace(/\/+$/, "")}/chat/completions`
   return {
-    async complete({ system, messages, tools }) {
+    async complete({ system, messages, tools, onDelta }) {
       const res = await fetch(url, {
         method: "POST",
         headers: {
@@ -22,13 +22,15 @@ export function openAIAdapter(opts: { baseUrl: string; apiKey?: string; model: s
           messages: toOpenAIMessages(system, messages),
           tools: toOpenAITools(tools),
           tool_choice: "auto",
+          stream: true,
+          stream_options: { include_usage: true },
         }),
       })
       if (!res.ok) {
         const body = await res.text().catch(() => "")
         throw new Error(`The AI server answered ${res.status}. ${body.slice(0, 300)}`)
       }
-      return fromOpenAI(await res.json())
+      return fromOpenAI(await readChatResponse(res, onDelta))
     },
   }
 }

@@ -21,8 +21,9 @@ import { Modal } from "../Modal"
 import { Toggle } from "./widgets"
 
 type Line =
-  | { role: "user" | "assistant" | "error"; text: string }
-  | { role: "thinking"; text: string }
+  | { role: "user" | "error"; text: string }
+  /** `live` while the model is still writing it */
+  | { role: "assistant" | "thinking"; text: string; live?: boolean }
   | { role: "tool"; text: string; error?: boolean }
   | { role: "pending"; pending: Pending }
 
@@ -129,7 +130,15 @@ export function AiPanel() {
     setInput("")
     setBusy("Thinking…")
     const onEvent = (e: AgentEvent) => {
-      if (e.type === "thinking") setLines((ls) => [...ls, { role: "thinking", text: e.text }])
+      if (e.type === "delta") {
+        const role = e.channel === "thinking" ? "thinking" : "assistant"
+        setLines((ls) => {
+          const last = ls.at(-1)
+          if (last && last.role === role && last.live) return [...ls.slice(0, -1), { ...last, text: last.text + e.text }]
+          return [...ls, { role, text: e.text, live: true }]
+        })
+        setBusy(null)
+      } else if (e.type === "thinking") setLines((ls) => [...ls, { role: "thinking", text: e.text }])
       else if (e.type === "text") setLines((ls) => [...ls, { role: "assistant", text: e.text }])
       else if (e.type === "tool") {
         setLines((ls) => [...ls, { role: "tool", text: e.error ? `${TOOL_LABELS[e.name] ?? e.name}: ${e.result}` : (TOOL_LABELS[e.name] ?? e.name), error: e.error }])
@@ -154,14 +163,23 @@ export function AiPanel() {
         reply = run.reply
         pending = run.pending
       })
-      setLines((ls) => [
-        ...ls,
-        ...(reply ? [{ role: "assistant" as const, text: reply }] : []),
-        ...(pending ? [{ role: "pending" as const, pending }] : []),
-        ...(!reply && !pending ? [{ role: "assistant" as const, text: "Done." }] : []),
-      ])
+      setLines((ls) => {
+        // A reply that streamed in is already on screen: settle it instead of adding it again.
+        const last = ls.at(-1)
+        const streamed = !!reply && last?.role === "assistant" && last.live
+        const settled = ls.map((l): Line => (l.role === "assistant" || l.role === "thinking" ? { ...l, live: false } : l))
+        if (streamed) settled[settled.length - 1] = { role: "assistant", text: reply }
+        return [
+          ...settled,
+          ...(reply && !streamed ? [{ role: "assistant" as const, text: reply }] : []),
+          ...(pending ? [{ role: "pending" as const, pending }] : []),
+          ...(!reply && !pending ? [{ role: "assistant" as const, text: "Done." }] : []),
+        ]
+      })
     } catch (e) {
-      setLines((ls) => [...ls, { role: "error", text: e instanceof HostedError || e instanceof Error ? e.message : "Something went wrong." }])
+      setLines((ls) => [
+        ...ls.map((l): Line => (l.role === "assistant" || l.role === "thinking" ? { ...l, live: false } : l)),
+        { role: "error", text: e instanceof HostedError || e instanceof Error ? e.message : "Something went wrong." }])
     } finally {
       setBusy(null)
     }
@@ -225,8 +243,8 @@ export function AiPanel() {
           lines.map((l, i) => {
             if (l.role === "thinking") {
               return (
-                <details key={i} className="ai-thinking">
-                  <summary>Thinking</summary>
+                <details key={i} className="ai-thinking" open={l.live || undefined}>
+                  <summary>{l.live ? "Thinking…" : "Thinking"}</summary>
                   <div>{l.text}</div>
                 </details>
               )

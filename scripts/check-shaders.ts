@@ -50,7 +50,6 @@ for (const kind of ["effect", "transition"] as Kind[]) {
   for (const def of NODE_DEFS) {
     if (def.output || !availableFor(def, kind)) continue
     const doc = emptyDoc(kind)
-    if (def.next) doc.target = "next"
     if (def.type === "other_clip") {
       doc.params.push({ identifier: "otherClip", displayName: "Other clip", type: "clip", min: 0, max: 1, default: "" })
     }
@@ -72,10 +71,9 @@ for (const kind of ["effect", "transition"] as Kind[]) {
   }
 }
 
-// Every next-Drift parameter type, exposed at once.
+// Every parameter type, exposed at once.
 {
   const doc = emptyDoc("effect")
-  doc.target = "next"
   doc.assets.push({ id: "a1", name: "px.png", mime: "image/png", data: PIXEL, width: 1, height: 1 })
   const P = (identifier: string, type: ParamDef["type"], def: ParamDef["default"], extra: Partial<ParamDef> = {}): ParamDef => ({
     identifier,
