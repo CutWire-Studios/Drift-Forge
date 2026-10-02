@@ -36,6 +36,11 @@ export function anthropicAdapter(opts: { apiKey: string; model: string }): Model
       const response = await client.messages.create({
         model: opts.model,
         max_tokens: 16000,
+        // Summarised reasoning to show in the panel. Haiku 4.5 predates adaptive thinking and
+        // still takes a token budget (and returns its thinking text as-is).
+        thinking: opts.model.startsWith("claude-haiku-4-5")
+          ? { type: "enabled", budget_tokens: 4000 }
+          : { type: "adaptive", display: "summarized" },
         system,
         tools: tools.map((t) => ({ name: t.name, description: t.description, input_schema: t.parameters as Anthropic.Tool.InputSchema })),
         messages: toMessages(messages),
@@ -45,12 +50,15 @@ export function anthropicAdapter(opts: { apiKey: string; model: string }): Model
       }
       const calls: ToolCall[] = []
       let text = ""
+      let thinking = ""
       for (const block of response.content) {
         if (block.type === "tool_use") calls.push({ id: block.id, name: block.name, args: (block.input ?? {}) as Record<string, unknown> })
         else if (block.type === "text") text += block.text
+        else if (block.type === "thinking") thinking += block.thinking
       }
       return {
         text,
+        thinking: thinking.trim() || undefined,
         calls,
         raw: response.content,
         usage: { input: response.usage.input_tokens, output: response.usage.output_tokens },

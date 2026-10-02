@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { runAgent, type ChatTurn, type ModelAdapter } from "@/ai/agent"
+import { pendingAsText, runAgent, type AgentEvent, type ChatTurn, type ModelAdapter, type Pending, type Plan, type Question } from "@/ai/agent"
 import {
   getKey,
   HostedError,
@@ -20,9 +20,34 @@ import { useEditor } from "@/state/editor"
 import { Modal } from "../Modal"
 import { Toggle } from "./widgets"
 
-interface Line {
-  role: "user" | "assistant" | "error"
-  text: string
+type Line =
+  | { role: "user" | "assistant" | "error"; text: string }
+  | { role: "thinking"; text: string }
+  | { role: "tool"; text: string; error?: boolean }
+  | { role: "pending"; pending: Pending }
+
+/** The plain-text conversation the model sees next time: reasoning and tool progress are left out. */
+function historyOf(lines: Line[]): ChatTurn[] {
+  return lines.flatMap((l): ChatTurn[] => {
+    if (l.role === "user" || l.role === "assistant") return [{ role: l.role, text: l.text }]
+    if (l.role === "pending") return [{ role: "assistant", text: pendingAsText(l.pending) }]
+    return []
+  })
+}
+
+const TOOL_LABELS: Record<string, string> = {
+  list_blocks: "Looked through the blocks",
+  describe_block: "Read about a block",
+  view_graph: "Looked at the graph",
+  add_block: "Added a block",
+  remove_block: "Removed a block",
+  connect: "Connected blocks",
+  disconnect: "Disconnected an input",
+  set_setting: "Changed a setting",
+  set_option: "Changed an option",
+  expose_setting: "Added a slider",
+  set_details: "Named it",
+  check: "Checked the result",
 }
 
 /** Conversations per document, kept for this tab only. */
@@ -99,37 +124,42 @@ export function AiPanel() {
   const send = async (prompt: string) => {
     prompt = prompt.trim()
     if (!prompt || busy) return
-    const history: ChatTurn[] = lines.filter((l) => l.role !== "error").map((l) => ({ role: l.role as ChatTurn["role"], text: l.text }))
+    const history = historyOf(lines)
     setLines((ls) => [...ls, { role: "user", text: prompt }])
     setInput("")
     setBusy("Thinking…")
+    const onEvent = (e: AgentEvent) => {
+      if (e.type === "thinking") setLines((ls) => [...ls, { role: "thinking", text: e.text }])
+      else if (e.type === "text") setLines((ls) => [...ls, { role: "assistant", text: e.text }])
+      else if (e.type === "tool") {
+        setLines((ls) => [...ls, { role: "tool", text: e.error ? `${TOOL_LABELS[e.name] ?? e.name}: ${e.result}` : (TOOL_LABELS[e.name] ?? e.name), error: e.error }])
+        setBusy("Working…")
+      }
+    }
     try {
       let reply = ""
+      let pending: Pending | undefined
       await oneUndoStep(async (apply) => {
         const doc = useEditor.getState().doc!
         if (settings.provider === "cutwire") {
-          const r = await hostedPrompt(doc, prompt, history)
-          apply(r.doc)
+          const r = await hostedPrompt(doc, prompt, history, { event: onEvent, doc: apply })
           reply = r.reply
+          pending = r.pending
           return
         }
         const adapter = adapterFor(settings)
         if (typeof adapter === "string") throw new Error(adapter)
-        const run = await runAgent({
-          adapter,
-          doc,
-          prompt,
-          history,
-          maxSteps: 16,
-          onStep: (d, log) => {
-            apply(d)
-            setBusy(`Working… ${log.length} change${log.length === 1 ? "" : "s"}`)
-          },
-        })
+        const run = await runAgent({ adapter, doc, prompt, history, maxSteps: 20, onEvent, onStep: (d) => apply(d) })
         apply(run.doc)
         reply = run.reply
+        pending = run.pending
       })
-      setLines((ls) => [...ls, { role: "assistant", text: reply || "Done." }])
+      setLines((ls) => [
+        ...ls,
+        ...(reply ? [{ role: "assistant" as const, text: reply }] : []),
+        ...(pending ? [{ role: "pending" as const, pending }] : []),
+        ...(!reply && !pending ? [{ role: "assistant" as const, text: "Done." }] : []),
+      ])
     } catch (e) {
       setLines((ls) => [...ls, { role: "error", text: e instanceof HostedError || e instanceof Error ? e.message : "Something went wrong." }])
     } finally {
@@ -192,11 +222,36 @@ export function AiPanel() {
             ))}
           </div>
         ) : (
-          lines.map((l, i) => (
-            <div key={i} className={`ai-line ai-${l.role}`}>
-              {l.text}
-            </div>
-          ))
+          lines.map((l, i) => {
+            if (l.role === "thinking") {
+              return (
+                <details key={i} className="ai-thinking">
+                  <summary>Thinking</summary>
+                  <div>{l.text}</div>
+                </details>
+              )
+            }
+            if (l.role === "tool") {
+              return (
+                <div key={i} className={`ai-tool${l.error ? " ai-tool-error" : ""}`}>
+                  {l.text}
+                </div>
+              )
+            }
+            if (l.role === "pending") {
+              const active = i === lines.length - 1 && !busy
+              return l.pending.kind === "questions" ? (
+                <QuestionsCard key={i} questions={l.pending.questions} active={active} onAnswer={(t) => void send(t)} />
+              ) : (
+                <PlanCard key={i} plan={l.pending.plan} active={active} onAnswer={(t) => void send(t)} />
+              )
+            }
+            return (
+              <div key={i} className={`ai-line ai-${l.role}`}>
+                {l.text}
+              </div>
+            )
+          })
         )}
         {busy && <div className="ai-line ai-busy">{busy}</div>}
       </div>
@@ -231,6 +286,82 @@ export function AiPanel() {
         Use Drift Forge from Claude, Cursor or another AI app
       </button>
       {showMcp && <McpDialog onClose={() => setShowMcp(false)} />}
+    </div>
+  )
+}
+
+function QuestionsCard({ questions, active, onAnswer }: { questions: Question[]; active: boolean; onAnswer: (text: string) => void }) {
+  const [picked, setPicked] = useState<string[]>(() => questions.map(() => ""))
+  const pick = (i: number, v: string) => setPicked((p) => p.map((x, j) => (j === i ? v : x)))
+  const answered = picked.filter(Boolean).length
+  const submit = () =>
+    onAnswer(questions.map((q, i) => (picked[i] ? (questions.length > 1 ? `${q.question} ${picked[i]}` : picked[i]) : "")).filter(Boolean).join("\n"))
+  return (
+    <div className="ai-card">
+      {questions.map((q, i) => (
+        <div key={i} className="ai-question">
+          <p>{q.question}</p>
+          {q.options.length > 0 && (
+            <div className="ai-options">
+              {q.options.map((o) => (
+                <button
+                  key={o}
+                  type="button"
+                  className={`ai-suggestion${picked[i] === o ? " selected" : ""}`}
+                  disabled={!active}
+                  onClick={() => (questions.length === 1 ? onAnswer(o) : pick(i, picked[i] === o ? "" : o))}
+                >
+                  {o}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+      {active && questions.length > 1 && (
+        <button type="button" className="btn btn-primary btn-sm" disabled={!answered} onClick={submit}>
+          Send answers
+        </button>
+      )}
+      {active && <p className="meta small">Or type your own answer below.</p>}
+    </div>
+  )
+}
+
+const FEASIBILITY: Record<Plan["feasibility"], string> = {
+  possible: "Can be built",
+  partly: "Partly possible",
+  not_possible: "Not possible in Forge",
+}
+
+function PlanCard({ plan, active, onAnswer }: { plan: Plan; active: boolean; onAnswer: (text: string) => void }) {
+  return (
+    <div className="ai-card">
+      <span className={`ai-feasibility ai-feasibility-${plan.feasibility}`}>{FEASIBILITY[plan.feasibility]}</span>
+      <p>{plan.summary}</p>
+      {plan.steps.length > 0 && (
+        <ol className="ai-steps">
+          {plan.steps.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
+        </ol>
+      )}
+      {plan.limitations.length > 0 && (
+        <ul className="ai-limits">
+          {plan.limitations.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
+        </ul>
+      )}
+      <p className="meta">{plan.question}</p>
+      {active && plan.feasibility !== "not_possible" && (
+        <div className="ai-options">
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => onAnswer("Yes, build it.")}>
+            Build it
+          </button>
+          <span className="meta small">or type what to change below</span>
+        </div>
+      )}
     </div>
   )
 }

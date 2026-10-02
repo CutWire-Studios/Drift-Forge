@@ -1928,6 +1928,111 @@ select.input {
   font-style: italic;
 }
 
+.ai-thinking {
+  align-self: stretch;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ai-thinking summary {
+  color: var(--text-tertiary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ai-thinking > div {
+  max-height: 240px;
+  margin-top: 4px;
+  padding: 6px 10px;
+  overflow-y: auto;
+  border-left: 2px solid var(--border-strong);
+  white-space: pre-wrap;
+}
+
+.ai-tool {
+  align-self: flex-start;
+  padding-left: 10px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.ai-tool::before {
+  content: "· ";
+}
+
+.ai-tool-error {
+  color: var(--warning);
+}
+
+.ai-card {
+  display: flex;
+  align-self: stretch;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-tertiary);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.ai-question {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-suggestion.selected {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+}
+
+.ai-suggestion:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.ai-feasibility {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ai-feasibility-possible {
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  color: var(--success);
+}
+
+.ai-feasibility-partly {
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  color: var(--warning);
+}
+
+.ai-feasibility-not_possible {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
+.ai-steps,
+.ai-limits {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.ai-limits {
+  color: var(--text-secondary);
+}
+
 .ai-input {
   display: flex;
   align-items: flex-end;

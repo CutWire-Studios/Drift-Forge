@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, mock } from "bun:test"
 import { Hono } from "hono"
 import { STARTERS } from "@/starters"
-import { aiRoutes } from "./ai"
+import { aiRoutes, type StreamEvent } from "./ai"
 import type { Auth } from "./auth"
 import { config } from "./config"
 import { Ledger } from "./db"
@@ -62,6 +62,12 @@ describe("hosted AI", () => {
 
   const doc = STARTERS.find((s) => s.name === "Blank effect")!.doc
 
+  async function events(res: Response) {
+    const all = (await res.text()).trim().split("\n").map((l) => JSON.parse(l) as StreamEvent)
+    const done = all.find((e) => e.type === "done") as Extract<StreamEvent, { type: "done" }>
+    return { all, done }
+  }
+
   it("runs the tool loop on the server and books real usage", async () => {
     const { ledger, post, sent } = setup([
       {
@@ -72,7 +78,7 @@ describe("hosted AI", () => {
     ])
     const res = await post({ doc, prompt: "add grain", history: [] })
     expect(res.status).toBe(200)
-    const body = (await res.json()) as { doc: typeof doc; reply: string }
+    const { done: body } = await events(res)
     expect(body.reply).toBe("Added film grain.")
     expect(body.doc.nodes.some((n) => n.type === "grain")).toBe(true)
     const expected = (6200 / 1000) * config.neuronsPerKInput + (70 / 1000) * config.neuronsPerKOutput
@@ -102,7 +108,7 @@ describe("hosted AI", () => {
 
   it("caps the reply", async () => {
     const { post } = setup([{ choices: [{ message: { content: "x".repeat(5000) } }] }])
-    const body = (await (await post({ doc, prompt: "write me an essay" })).json()) as { reply: string }
+    const { done: body } = await events(await post({ doc, prompt: "write me an essay" }))
     expect(body.reply.length).toBe(600)
   })
 
@@ -117,8 +123,34 @@ describe("hosted AI", () => {
   it("refuses a request that can't fit in the remaining budget", async () => {
     const { ledger, post, sent } = setup([])
     ledger.reserve("user-1", config.userDailyNeurons - 1, config.userDailyNeurons, config.dailyNeurons)
-    const res = await post({ doc, prompt: "hi" })
-    expect(res.status).toBe(429)
+    const { done } = await events(await post({ doc, prompt: "hi" }))
+    expect(done.stopped).toContain("allowance")
     expect(sent).toHaveLength(0)
+  })
+
+  it("streams capped reasoning and tool progress", async () => {
+    const { post } = setup([
+      {
+        choices: [{ message: { reasoning: "r".repeat(9000), tool_calls: [{ id: "c1", function: { name: "add_block", arguments: '{"type":"grain"}' } }] } }],
+      },
+    ])
+    const { all } = await events(await post({ doc, prompt: "add grain" }))
+    const thinking = all.find((e) => e.type === "thinking") as { text: string }
+    expect(thinking.text.length).toBe(2000)
+    expect(all.some((e) => e.type === "tool")).toBe(true)
+    expect(all.some((e) => e.type === "progress")).toBe(true)
+  })
+
+  it("pauses for the user's confirmation without building", async () => {
+    const plan = { feasibility: "partly", summary: "A glow", steps: ["Add glow"], limitations: ["No trails"] }
+    const { post, sent } = setup([
+      { choices: [{ message: { tool_calls: [{ id: "c1", function: { name: "propose_plan", arguments: JSON.stringify(plan) } }] } }] },
+    ])
+    const { all, done } = await events(await post({ doc, prompt: "glowing trails" }))
+    const pending = all.find((e) => e.type === "pending") as { pending: { kind: string; plan: { feasibility: string } } }
+    expect(pending.pending.kind).toBe("plan")
+    expect(pending.pending.plan.feasibility).toBe("partly")
+    expect(sent).toHaveLength(1)
+    expect(done.doc.nodes.length).toBe(doc.nodes.length)
   })
 })

@@ -45,8 +45,8 @@ export const TOOLS: ToolSpec[] = [
   },
   {
     name: "describe_block",
-    description: "Show a block type's inputs (with ranges and defaults), outputs and options.",
-    parameters: obj({ type: { type: "string" } }, ["type"]),
+    description: "Show the inputs (with ranges and defaults), outputs and options of one or more block types. Ask for all the blocks you need at once.",
+    parameters: obj({ types: { type: "array", items: { type: "string" }, maxItems: 8 } }, ["types"]),
   },
   {
     name: "view_graph",
@@ -93,6 +93,43 @@ export const TOOLS: ToolSpec[] = [
     name: "check",
     description: "Compile the graph the way Drift will. Returns OK or the problems to fix. Always run before finishing.",
     parameters: obj({}),
+  },
+]
+
+/**
+ * Conversation tools for the built-in assistant: they end the turn and wait for the user. Not
+ * offered over MCP, where the calling app talks to its own user.
+ */
+export const CONVERSATION_TOOLS: ToolSpec[] = [
+  {
+    name: "ask_user",
+    description:
+      "Ask the user up to 3 short clarifying questions, each with 2–5 suggested answers they can click. Ends your turn; their answers come in the next message.",
+    parameters: obj(
+      {
+        questions: {
+          type: "array",
+          maxItems: 3,
+          items: obj({ question: { type: "string" }, options: { type: "array", items: { type: "string" }, maxItems: 5 } }, ["question"]),
+        },
+      },
+      ["questions"],
+    ),
+  },
+  {
+    name: "propose_plan",
+    description:
+      "Before building, tell the user whether their idea can be made with Forge's blocks (possible / partly / not_possible), how you'd build it, and what won't match, then ask them to confirm. Ends your turn.",
+    parameters: obj(
+      {
+        feasibility: { type: "string", enum: ["possible", "partly", "not_possible"] },
+        summary: { type: "string", description: "One or two sentences: what you'll make" },
+        steps: { type: "array", items: { type: "string" }, maxItems: 12, description: "The blocks and wiring, in plain words" },
+        limitations: { type: "array", items: { type: "string" }, maxItems: 6, description: "What can't be done or will differ, and why" },
+        question: { type: "string", description: "e.g. Shall I build it?" },
+      },
+      ["feasibility", "summary", "steps"],
+    ),
   },
 ]
 
@@ -275,9 +312,15 @@ export function runTool(doc: ForgeDoc, name: string, args: Record<string, unknow
         }
       }
       case "describe_block": {
-        const def = nodeDef(str(args.type))
-        if (!def) return fail(`No block type "${str(args.type)}". Use list_blocks.`)
-        return { doc, result: describeBlock(def) }
+        const types = (Array.isArray(args.types) ? args.types : [args.type]).map(str).filter(Boolean).slice(0, 8)
+        if (!types.length) return fail("Give the block types to describe.")
+        return {
+          doc,
+          result: types.map((t) => {
+            const def = nodeDef(t)
+            return def ? describeBlock(def) : `No block type "${t}".`
+          }).join("\n\n"),
+        }
       }
       case "view_graph":
         return { doc, result: viewGraph(doc) }
@@ -378,3 +421,6 @@ export function runTool(doc: ForgeDoc, name: string, args: Record<string, unknow
     return fail(`That failed: ${(e as Error).message}`)
   }
 }
+
+/** Everything the built-in assistant can call. */
+export const AGENT_TOOLS: ToolSpec[] = [...TOOLS, ...CONVERSATION_TOOLS]

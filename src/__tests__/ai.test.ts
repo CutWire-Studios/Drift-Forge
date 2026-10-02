@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { runAgent, type ModelAdapter, type ModelReply, type ToolCall } from "@/ai/agent"
+import { fromOpenAI } from "@/ai/providers/openaiFormat"
 import { runTool, viewGraph } from "@/ai/tools"
 import { compile } from "@/compiler/compile"
 import { emptyDoc } from "@/doc/util"
@@ -132,5 +133,23 @@ describe("agent", () => {
     await expect(
       runAgent({ adapter, doc: blank("effect"), prompt: "x", beforeCall: () => { throw new Error("over budget") } }),
     ).rejects.toThrow("over budget")
+  })
+})
+
+describe("model replies", () => {
+  it("recovers tool calls Gemma writes in its own template format", () => {
+    const r = fromOpenAI({
+      choices: [{ message: { content: null, reasoning: 'Next.<|tool_call>call:set_setting{block:<|"|>b1<|"|>,setting:<|"|>amount, more<|"|>,value:0.25}<tool_call|>' } }],
+    })
+    expect(r.calls).toHaveLength(1)
+    expect(r.calls[0].name).toBe("set_setting")
+    expect(r.calls[0].args).toEqual({ block: "b1", setting: "amount, more", value: 0.25 })
+    expect(r.thinking).toBe("Next.")
+  })
+
+  it("describes several blocks in one call", () => {
+    const r = runTool(blank("effect"), "describe_block", { types: ["wave", "nope"] })
+    expect(r.result).toContain("wave")
+    expect(r.result).toContain('No block type "nope"')
   })
 })

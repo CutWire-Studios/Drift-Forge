@@ -3,10 +3,10 @@
 //
 // Everything that could turn this into a general-purpose AI lives here on the server: the system
 // prompt, the model, the tools and the limits. A client sends only its prompt, a short text history
-// and the current graph; it can't add instructions, tools or tool results, and what comes back is
-// a graph plus a reply capped to a couple of sentences.
+// and the current graph; it can't add instructions, tools or tool results. What streams back is the
+// model's (capped) reasoning, tool progress, at most a short reply, and the graph.
 import { Hono } from "hono"
-import { runAgent, type ChatTurn, type ModelAdapter } from "@/ai/agent"
+import { runAgent, StopRun, type AgentEvent, type ChatTurn, type ModelAdapter } from "@/ai/agent"
 import { fromOpenAI, toOpenAIMessages, toOpenAITools } from "@/ai/providers/openaiFormat"
 import type { ForgeDoc } from "@/doc/types"
 import { parseForgeDoc } from "@/export/link"
@@ -18,12 +18,12 @@ import { RateLimiter } from "./ratelimit"
 const MAX_BODY = 256 * 1024
 const MAX_PROMPT = 1500
 const MAX_HISTORY = 8
-const MAX_STEPS = 6
-const MAX_OUTPUT_TOKENS = 1024
+const MAX_STEPS = 20
+/** Gemma reasons before answering; its reasoning counts against this too. */
+const MAX_OUTPUT_TOKENS = 2048
 const MAX_REPLY = 600
+const MAX_THINKING = 2000
 const MAX_NODES = 150
-
-class OverBudget extends Error {}
 
 function workersAi(): ModelAdapter {
   const base = config.cfAiGateway
@@ -41,7 +41,7 @@ function workersAi(): ModelAdapter {
           max_completion_tokens: MAX_OUTPUT_TOKENS,
           temperature: 0.2,
         }),
-        signal: AbortSignal.timeout(60_000),
+        signal: AbortSignal.timeout(90_000),
       })
       if (!res.ok) throw new Error(`Workers AI answered ${res.status}: ${(await res.text()).slice(0, 300)}`)
       const body = (await res.json()) as { result?: unknown }
@@ -62,6 +62,12 @@ function quotaView(q: { userUsed: number; globalUsed: number }) {
     globalLeft: Math.max(0, Math.floor(config.dailyNeurons - q.globalUsed)),
   }
 }
+
+export type StreamEvent =
+  | AgentEvent
+  | { type: "progress"; doc: ForgeDoc }
+  | { type: "done"; doc: ForgeDoc; reply: string; quota: ReturnType<typeof quotaView>; stopped?: string }
+  | { type: "error"; error: string; quota?: ReturnType<typeof quotaView> }
 
 export function aiRoutes(ledger: Ledger, auth: Auth) {
   const app = new Hono()
@@ -111,38 +117,51 @@ export function aiRoutes(ledger: Ledger, auth: Auth) {
       )
     }
 
-    let reserved = 0
-    try {
-      const run = await runAgent({
-        adapter,
-        doc,
-        prompt,
-        history,
-        maxSteps: MAX_STEPS,
-        beforeCall: (_step, messages) => {
-          // The system prompt and tool list come to roughly 12k characters on top of the messages.
-          const chars = JSON.stringify(messages).length + 12_000
-          reserved = neurons(estimateInputTokens(chars), MAX_OUTPUT_TOKENS)
-          const r = ledger.reserve(s.sub, reserved, config.userDailyNeurons, config.dailyNeurons)
-          if (!r.ok) throw new OverBudget()
-        },
-        afterCall: (usage) => {
-          // Without reported usage the reservation (an over-estimate) stands.
-          if (usage) ledger.settle(s.sub, neurons(usage.input, usage.output) - reserved)
-          reserved = 0
-        },
-      })
-      return c.json({ doc: run.doc, reply: run.reply.slice(0, MAX_REPLY), log: run.log, quota: quotaView(ledger.quota(s.sub)) })
-    } catch (e) {
-      if (e instanceof OverBudget) {
-        return c.json(
-          { error: "The built-in AI ran out of today's free allowance partway through. Your graph wasn't changed.", quota: quotaView(ledger.quota(s.sub)) },
-          429,
-        )
-      }
-      console.error("ai request failed", e)
-      return c.json({ error: "The AI couldn't finish that. Try again in a moment." }, 502)
-    }
+    // Newline-delimited JSON, one event per line, so the panel can show reasoning and progress live.
+    const stream = new ReadableStream<Uint8Array>({
+      start: async (controller) => {
+        const enc = new TextEncoder()
+        const send = (e: StreamEvent) => controller.enqueue(enc.encode(`${JSON.stringify(e)}\n`))
+        let reserved = 0
+        try {
+          const run = await runAgent({
+            adapter,
+            doc,
+            prompt,
+            history,
+            maxSteps: MAX_STEPS,
+            limits: { thinking: MAX_THINKING, text: MAX_REPLY },
+            onEvent: send,
+            onStep: (d) => send({ type: "progress", doc: d }),
+            beforeCall: (_step, messages) => {
+              // The system prompt and tool list come to roughly 14k characters on top of the messages.
+              reserved = neurons(estimateInputTokens(JSON.stringify(messages).length + 14_000), MAX_OUTPUT_TOKENS)
+              const r = ledger.reserve(s.sub, reserved, config.userDailyNeurons, config.dailyNeurons)
+              if (!r.ok) {
+                throw new StopRun("I ran out of today's free AI allowance, so I stopped here. Everything I did so far is kept.")
+              }
+            },
+            afterCall: (reply) => {
+              // Workers AI reports the exact neurons; otherwise price the token counts, and without
+              // any usage the reservation (an over-estimate) stands.
+              const actual = reply.usage?.neurons ?? (reply.usage ? neurons(reply.usage.input, reply.usage.output) : reserved)
+              ledger.settle(s.sub, actual - reserved)
+              reserved = 0
+            },
+          })
+          send({ type: "done", doc: run.doc, reply: run.reply.slice(0, MAX_REPLY), quota: quotaView(ledger.quota(s.sub)), stopped: run.stopped })
+        } catch (e) {
+          console.error("ai request failed", e)
+          send({ type: "error", error: "The AI couldn't finish that. Try again in a moment.", quota: quotaView(ledger.quota(s.sub)) })
+        } finally {
+          controller.close()
+        }
+      },
+    })
+    return new Response(stream, {
+      // X-Accel-Buffering: nginx would otherwise hold the events back until the run finishes.
+      headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store", "x-accel-buffering": "no" },
+    })
   })
 
   return app
