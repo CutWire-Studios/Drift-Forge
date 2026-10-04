@@ -1,4 +1,5 @@
 import { isParamRef, type ForgeDoc, type ForgeEdge, type ForgeNode, type Kind, type ParamDef, type SocketType } from "@/doc/types"
+import { audioProcessor } from "@/audio/processors"
 import { nodeDef } from "@/nodes/registry"
 import type { EmitCtx, EngineUniform, HelperName, NodeDef } from "@/nodes/types"
 import { coerce, glslLiteral, glslType } from "./glsl"
@@ -102,6 +103,11 @@ class CompileFailure extends Error {
 const safe = (id: string) => id.replace(/[^A-Za-z0-9]/g, "")
 
 export function compile(doc: ForgeDoc, opts: CompileOptions): CompileResult {
+  // An audio effect has no graph and no shader; there is nothing to compile, only a processor to name.
+  if (doc.kind === "audio") {
+    const errors = doc.audio && audioProcessor(doc.audio.processor) ? [] : [{ message: "Pick an audio processor." }]
+    return { ok: errors.length === 0, errors, passes: [], buffers: [], textures: [], literals: [], usesTime: false }
+  }
   const errors = validate(doc, { requireOutput: !opts.target })
   const empty: CompileResult = {
     ok: false,

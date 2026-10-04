@@ -55,7 +55,7 @@ Same fields as a `.driftpkg` manifest, serialised with keys sorted and no whites
 
 - `id` is the effect/transition id prefixed with `user.`, so it can't collide with CutWire pack
   ids (`effects.core`, `transitions.core`, …).
-- `provides[0].kind` is `effects` or `transitions`; `items` is always 1.
+- `provides[0].kind` is `effects`, `transitions` or `audio-effects`; `items` is always 1.
 - `files[].offset` indexes the uncompressed payload; offsets are contiguous and in path order.
 
 ## Payload tree
@@ -69,6 +69,21 @@ effects/<id>/thumbnail.png      256×256 (transitions: preview_strip.png, 1536×
 effects/<id>/tex0.png …         images referenced by pipeline.textures
 effects/<id>/forge.json         the Drift Forge source document; Drift can ignore it
 ```
+
+An audio effect (`audio-effects/<id>/`) has no shader or picture: just `audio-effect.json` and
+`forge.json`. It is a built-in JUCE processor plus slider values, so it carries no code:
+
+```json
+{
+  "id": "forge_my_echo_k3x9", "displayName": "My Echo", "category": "space", "icon": "repeat",
+  "order": 1000, "backend": "juce", "processor": "echo", "prerollMs": 800,
+  "parameters": [{ "identifier": "delay", "displayName": "Delay (ms)", "type": "float",
+                   "minValue": 10, "maxValue": 900, "defaultValue": 120 }]
+}
+```
+
+`processor` must be one Drift implements (the table in `src/audio/processors.ts` mirrors
+`audio-effects/*/audio-effect.json` in the Drift repo). Drift needs 0.7.1 or newer to sideload one.
 
 `effect.json` / `transition.json` follow `GpuPackageParse` exactly. Packages that use the newer
 controls or blocks add parameter types and a top-level `nextFeatures` list described in
@@ -90,5 +105,5 @@ matching change (and documents written before then would need the flip toggled o
 3. Verify each file's `sha256`, reject absolute paths and `..` segments, and require every path to
    sit under `provides[0].root/<one folder>/`.
 4. Show an "unverified, made by a user" confirmation, since nothing vouches for the author.
-5. Install into `<AppData>/effects` or `<AppData>/transitions` (the same roots unsigned folders
+5. Install into `<AppData>/effects`, `<AppData>/transitions` or `<AppData>/audio-effects` (the same roots unsigned folders
    already load from), or into `addons/<id>/` with an `installed.json` entry marked unsigned.

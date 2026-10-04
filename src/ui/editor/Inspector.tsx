@@ -615,6 +615,22 @@ function ParamEditor({ p, index, count, onRenamed }: { p: ParamDef; index: numbe
           </label>
         </div>
       )}
+      {(p.type === "float" || p.type === "int") && (
+        <div className="field-inline">
+          <span>Whole numbers only</span>
+          <Toggle
+            value={p.type === "int"}
+            onChange={(on) =>
+              updateParam(
+                p.identifier,
+                on
+                  ? { type: "int", min: Math.round(p.min), max: Math.round(p.max), default: Math.round(Number(p.default)) }
+                  : { type: "float" },
+              )
+            }
+          />
+        </div>
+      )}
       {p.type === "float" && (
         <div className="field-inline">
           <span>Show as a dial (angle)</span>

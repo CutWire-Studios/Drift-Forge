@@ -1,9 +1,12 @@
 import { NEXT_PARAM_TYPES, type ForgeDoc, type GradientStop, type ParamDef, type ParamDefault, type Rgba } from "@/doc/types"
 import { rgbToHex } from "@/doc/util"
+import { audioProcessor } from "@/audio/processors"
 import { nodeDef } from "@/nodes/registry"
 import type { CompileResult } from "./compile"
 
 export const MIN_APP_VERSION = "0.7.0"
+/** First Drift that reads the parameter types in `nextFeatures` (point, choice, int, colour alpha). */
+const NEXT_APP_VERSION = "0.7.1"
 
 const hex8 = (c: Rgba) => rgbToHex(c) + Math.round(Math.min(1, Math.max(0, c[3])) * 255).toString(16).padStart(2, "0")
 
@@ -91,8 +94,15 @@ export function nextFeatures(doc: ForgeDoc, compiled: CompileResult): string[] {
   return [...f].sort()
 }
 
+/** The oldest Drift that can load `doc`: 0.7.0 unless it uses something only the next Drift reads. */
+export function minAppVersion(doc: ForgeDoc, compiled: CompileResult): string {
+  // Audio packages need the Drift that sideloads audio effects, whatever sliders they use.
+  return doc.kind === "audio" || nextFeatures(doc, compiled).length > 0 ? NEXT_APP_VERSION : MIN_APP_VERSION
+}
+
 /** effect.json / transition.json in the shape Drift's GpuPackageParse reads. */
 export function packageJson(doc: ForgeDoc, compiled: CompileResult): Record<string, unknown> {
+  if (doc.kind === "audio") return audioPackageJson(doc, compiled)
   const pipeline: Record<string, unknown> = {
     intermediateBuffers: compiled.buffers.map((id) => ({ id, scale: 1.0 })),
     passes: compiled.passes.map((p, i) => ({
@@ -131,6 +141,26 @@ export function packageJson(doc: ForgeDoc, compiled: CompileResult): Record<stri
   return json
 }
 
+/** audio-effect.json: a built-in JUCE processor plus the slider values; there is no pipeline. */
+function audioPackageJson(doc: ForgeDoc, compiled: CompileResult): Record<string, unknown> {
+  const processor = audioProcessor(doc.audio?.processor)!
+  const json: Record<string, unknown> = {
+    id: doc.meta.id,
+    displayName: doc.meta.displayName,
+    category: doc.meta.category,
+    icon: processor.icon,
+    order: 1000,
+  }
+  if (doc.meta.description) json.description = doc.meta.description
+  json.backend = "juce"
+  json.processor = processor.id
+  json.prerollMs = processor.prerollMs
+  json.parameters = doc.params.map((p) => paramEntry(doc, p))
+  const features = nextFeatures(doc, compiled)
+  if (features.length) json.nextFeatures = features
+  return json
+}
+
 export function packageJsonName(doc: ForgeDoc): string {
-  return doc.kind === "effect" ? "effect.json" : "transition.json"
+  return doc.kind === "effect" ? "effect.json" : doc.kind === "audio" ? "audio-effect.json" : "transition.json"
 }

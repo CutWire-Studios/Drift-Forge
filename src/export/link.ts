@@ -59,7 +59,7 @@ export function parseForgeDoc(text: string): ForgeDoc {
   }
   if (!d || typeof d !== "object" || d.forge === undefined) throw new LinkError("This isn't a Drift Forge document.")
   if (d.forge > FORGE_SCHEMA) throw new LinkError("This was made with a newer Drift Forge. Reload the page to update.")
-  if (d.kind !== "effect" && d.kind !== "transition") throw new LinkError("Unknown document kind.")
+  if (d.kind !== "effect" && d.kind !== "transition" && d.kind !== "audio") throw new LinkError("Unknown document kind.")
   if (!Array.isArray(d.nodes) || !Array.isArray(d.edges) || !Array.isArray(d.params) || !d.meta) {
     throw new LinkError("The document is incomplete.")
   }

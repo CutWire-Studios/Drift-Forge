@@ -1,19 +1,19 @@
 import { strToU8, unzipSync, zipSync, type Zippable } from "fflate"
 import type { ForgeDoc } from "@/doc/types"
-import { MIN_APP_VERSION } from "@/compiler/manifest"
+import { minAppVersion } from "@/compiler/manifest"
 import { readDriftfx, writeDriftfx } from "./driftfx"
 import { FORGE_FILE, GENERATOR, installText, packageFiles, packageRoot, type PreviewImages } from "./package"
 import { parseForgeDoc } from "./link"
 
 export function exportZip(doc: ForgeDoc, preview: PreviewImages): Uint8Array {
-  const { files } = packageFiles(doc, preview)
-  const tree: Zippable = { "INSTALL.txt": strToU8(installText(doc)) }
+  const { files, compiled } = packageFiles(doc, preview)
+  const tree: Zippable = { "INSTALL.txt": strToU8(installText(doc, minAppVersion(doc, compiled))) }
   for (const f of files) tree[`${doc.meta.id}/${f.path}`] = f.data
   return zipSync(tree, { level: 9 })
 }
 
 export async function exportDriftfx(doc: ForgeDoc, preview: PreviewImages): Promise<Uint8Array> {
-  const { files } = packageFiles(doc, preview)
+  const { files, compiled } = packageFiles(doc, preview)
   const root = packageRoot(doc)
   return writeDriftfx(
     {
@@ -21,10 +21,10 @@ export async function exportDriftfx(doc: ForgeDoc, preview: PreviewImages): Prom
       version: doc.meta.version || "1.0.0",
       name: doc.meta.displayName,
       description: doc.meta.description,
-      details: `Made with Drift Forge. ${doc.kind === "effect" ? "Effect" : "Transition"} id: ${doc.meta.id}.`,
+      details: `Made with Drift Forge. ${doc.kind === "effect" ? "Effect" : doc.kind === "audio" ? "Audio effect" : "Transition"} id: ${doc.meta.id}.`,
       author: doc.meta.author,
       license: "",
-      minAppVersion: MIN_APP_VERSION,
+      minAppVersion: minAppVersion(doc, compiled),
       provides: [{ kind: root, root, items: 1 }],
       generator: GENERATOR,
     },

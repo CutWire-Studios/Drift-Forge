@@ -24,7 +24,7 @@ export interface DriftfxManifest {
   minAppVersion: string
   platform: ""
   installedSize: number
-  provides: { kind: "effects" | "transitions"; root: string; items: number }[]
+  provides: { kind: "effects" | "transitions" | "audio-effects"; root: string; items: number }[]
   files: { path: string; offset: number; size: number; sha256: string }[]
   generator: string
 }

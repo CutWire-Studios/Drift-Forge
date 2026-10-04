@@ -1,6 +1,6 @@
 export const FORGE_SCHEMA = 1
 
-export type Kind = "effect" | "transition"
+export type Kind = "effect" | "transition" | "audio"
 
 export type SocketType = "float" | "vec2" | "color"
 
@@ -125,6 +125,8 @@ export interface ForgeDoc {
   edges: ForgeEdge[]
   assets: ForgeAsset[]
   presets?: Preset[]
+  /** audio effects: which of Drift's built-in processors this package configures (no node graph) */
+  audio?: { processor: string }
   preview: {
     /** seconds into the clip the effect thumbnail is rendered at */
     thumbTime: number
@@ -138,4 +140,5 @@ export function isParamRef(v: unknown): v is ParamRef {
 }
 
 export const EFFECT_CATEGORIES = ["color", "glitch", "retro", "dreamy", "impact", "artistic", "funny", "blurs"]
+export const AUDIO_CATEGORIES = ["space", "texture", "transmission", "utility", "voice"]
 export const TRANSITION_CATEGORIES = ["basic", "geometric", "distortion", "liquid", "stylized", "glitch", "cinematic"]

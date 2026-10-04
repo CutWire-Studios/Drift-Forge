@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { compile } from "@/compiler/compile"
-import { MIN_APP_VERSION } from "@/compiler/manifest"
+import { minAppVersion } from "@/compiler/manifest"
 import type { ForgeDoc } from "@/doc/types"
 import { base64ToBytes } from "@/doc/util"
 import { exportDriftfx, exportZip } from "@/export/archive"
@@ -42,7 +42,9 @@ async function squareThumb(file: File): Promise<string> {
 export function ExportDialog({ onClose, onShowCode }: { onClose: () => void; onShowCode: () => void }) {
   const doc = useEditor((s) => s.doc!)
   const update = useEditor((s) => s.update)
-  const errors = useMemo(() => compile(doc, { mode: "export" }).errors, [doc])
+  const compiled = useMemo(() => compile(doc, { mode: "export" }), [doc])
+  const errors = compiled.errors
+  const neededVersion = useMemo(() => minAppVersion(doc, compiled), [doc, compiled])
   const [png, setPng] = useState<Uint8Array | null>(null)
   const [link, setLink] = useState<{ url: string } | { tooLong: number } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -140,7 +142,7 @@ export function ExportDialog({ onClose, onShowCode }: { onClose: () => void; onS
               <div>
                 <h4>Zip for Drift</h4>
                 <p className="meta">
-                  Works today. Unzip it into <code>{osFolder(doc)}</code> and restart Drift. Needs Drift {MIN_APP_VERSION} or newer.
+                  Works today. Unzip it into <code>{osFolder(doc)}</code> and restart Drift. Needs Drift {neededVersion} or newer.
                 </p>
               </div>
               <button

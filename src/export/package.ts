@@ -12,8 +12,8 @@ export interface PreviewImages {
   png: Uint8Array | null
 }
 
-export function packageRoot(doc: ForgeDoc): "effects" | "transitions" {
-  return doc.kind === "effect" ? "effects" : "transitions"
+export function packageRoot(doc: ForgeDoc): "effects" | "transitions" | "audio-effects" {
+  return doc.kind === "effect" ? "effects" : doc.kind === "audio" ? "audio-effects" : "transitions"
 }
 
 export function previewFileName(doc: ForgeDoc): string {
@@ -52,7 +52,7 @@ export function packageFiles(doc: ForgeDoc, preview: PreviewImages): { files: Pa
   return { files, compiled }
 }
 
-export function installText(doc: ForgeDoc): string {
+export function installText(doc: ForgeDoc, minVersion: string = MIN_APP_VERSION): string {
   const sub = packageRoot(doc)
   return `${doc.meta.displayName} — made with Drift Forge
 ${"=".repeat(doc.meta.displayName.length + 25)}
@@ -64,9 +64,9 @@ Install on desktop: copy the "${doc.meta.id}" folder into Drift's ${sub} folder,
   macOS:    ~/Library/Application Support/CutWire Drift/CutWire Drift/${sub}/
 
 Create the "${sub}" folder if it doesn't exist yet. The ${doc.kind} appears under
-"${doc.meta.category}" in Drift's ${doc.kind === "effect" ? "effects" : "transitions"} browser.
+"${doc.meta.category}" in Drift's ${doc.kind === "effect" ? "effects" : doc.kind === "audio" ? "audio effects" : "transitions"} browser.
 
-Requires Drift ${MIN_APP_VERSION} or newer.
+Requires Drift ${minVersion} or newer.
 
 To edit this ${doc.kind} again, open forge.json (or the whole zip) in Drift Forge.
 `

@@ -3,6 +3,9 @@ import { unzipSync } from "fflate"
 import { exportDriftfx, exportZip, importFile } from "@/export/archive"
 import { DRIFTFX_MAGIC, readDriftfx, writeDriftfx } from "@/export/driftfx"
 import { decodeLinkPayload, encodeLinkPayload, linkDoc } from "@/export/link"
+import { newAudioDoc } from "@/audio/processors"
+import { compile } from "@/compiler/compile"
+import { minAppVersion, packageJson } from "@/compiler/manifest"
 import { STARTERS } from "@/starters"
 
 const glow = STARTERS.find((s) => s.name === "Dreamy glow")!.doc
@@ -82,5 +85,34 @@ describe("link", () => {
   it("explains a truncated link", async () => {
     const payload = await encodeLinkPayload(wipe)
     await expect(decodeLinkPayload(payload.slice(0, payload.length / 2))).rejects.toThrow(/damaged/)
+  })
+})
+
+describe("audio effects", () => {
+  const echo = newAudioDoc("echo")
+
+  it("exports a processor package with no pipeline", () => {
+    const names = Object.keys(unzipSync(exportZip(echo, { png: null }))).sort()
+    expect(names).toEqual(["INSTALL.txt", `${echo.meta.id}/audio-effect.json`, `${echo.meta.id}/forge.json`].sort())
+    const json = packageJson(echo, compile(echo, { mode: "export" }))
+    expect(json).toMatchObject({ backend: "juce", processor: "echo", prerollMs: 800, category: "space" })
+    expect(json).not.toHaveProperty("pipeline")
+    expect((json.parameters as { identifier: string }[]).map((p) => p.identifier)).toEqual(["delay", "decay", "in_gain", "out_gain"])
+  })
+
+  it("rides in a .driftfx under audio-effects and re-opens", async () => {
+    const bytes = await exportDriftfx(echo, { png: null })
+    const { manifest } = await readDriftfx(bytes)
+    expect(manifest.provides).toEqual([{ kind: "audio-effects", root: "audio-effects", items: 1 }])
+    expect(manifest.files.map((f) => f.path)).toContain(`audio-effects/${echo.meta.id}/audio-effect.json`)
+    expect(manifest.minAppVersion).toBe("0.7.1")
+    expect(await importFile("echo.driftfx", bytes)).toEqual(echo)
+    expect(minAppVersion(echo, compile(echo, { mode: "export" }))).toBe("0.7.1")
+  })
+
+  it("survives a share link and refuses an unknown processor", async () => {
+    expect(await decodeLinkPayload(await encodeLinkPayload(echo))).toEqual(linkDoc(echo))
+    const bad = { ...echo, audio: { processor: "nope" } }
+    expect(compile(bad, { mode: "export" }).ok).toBe(false)
   })
 })

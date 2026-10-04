@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router"
 import type { ForgeDoc, Kind } from "@/doc/types"
 import { makeEffectId } from "@/doc/util"
+import { newAudioDoc } from "@/audio/processors"
 import { importFile } from "@/export/archive"
 import { decodeLinkPayload } from "@/export/link"
 import { renderCardThumb } from "@/runtime/engine"
@@ -29,7 +30,8 @@ function ago(ts: number): string {
 function useCardThumb(doc: ForgeDoc, stored?: string) {
   const [src, setSrc] = useState(stored ?? null)
   useEffect(() => {
-    if (stored) return
+    // Audio effects have no picture to render.
+    if (stored || doc.kind === "audio") return
     let live = true
     renderCardThumb(doc)
       .then((url) => live && setSrc(url))
@@ -59,8 +61,16 @@ function LibraryCard({ entry, onDelete, onDuplicate }: { entry: LibraryEntry; on
   return (
     <div className="card lib-card">
       <Link to={`/edit/${entry.localId}`} className="card-thumb">
-        {thumb ? <img src={thumb} alt="" /> : <div className="skeleton" />}
-        <span className="pill kind-pill">{entry.doc.kind === "effect" ? "Effect" : "Transition"}</span>
+        {entry.doc.kind === "audio" ? (
+          <div className="audio-thumb" aria-hidden="true">
+            ♪
+          </div>
+        ) : thumb ? (
+          <img src={thumb} alt="" />
+        ) : (
+          <div className="skeleton" />
+        )}
+        <span className="pill kind-pill">{entry.doc.kind === "effect" ? "Effect" : entry.doc.kind === "audio" ? "Audio" : "Transition"}</span>
       </Link>
       <div className="card-text">
         <Link to={`/edit/${entry.localId}`}>
@@ -165,7 +175,7 @@ export function Home() {
         }}
       >
         <section className="hero">
-          <h1>Make your own effects and transitions for Drift</h1>
+          <h1>Make your own effects, transitions and audio effects for Drift</h1>
           <p className="hero-sub">
             Connect building blocks, watch the result live, then drop it straight into Drift. No code needed, and
             everything stays in your browser.
@@ -189,6 +199,15 @@ export function Home() {
               </span>
               <strong>New transition</strong>
               <span className="meta">Moves from one clip to the next: wipes, dissolves, pushes…</span>
+            </button>
+            <button type="button" className="new-card" onClick={() => start(newAudioDoc())}>
+              <span className="new-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="28" height="28">
+                  <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10v4" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+                </svg>
+              </span>
+              <strong>New audio effect</strong>
+              <span className="meta">Reshapes sound: echo, chorus, EQ, voice effects…</span>
             </button>
           </div>
         </section>

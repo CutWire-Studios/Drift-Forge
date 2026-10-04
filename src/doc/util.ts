@@ -20,14 +20,17 @@ export function makeEffectId(name: string): string {
   return `forge_${slugify(name)}_${Math.random().toString(36).slice(2, 6)}`
 }
 
-export function emptyDoc(kind: Kind, name = kind === "effect" ? "My effect" : "My transition"): ForgeDoc {
+const DEFAULT_NAME: Record<Kind, string> = { effect: "My effect", transition: "My transition", audio: "My audio effect" }
+const DEFAULT_CATEGORY: Record<Kind, string> = { effect: "artistic", transition: "basic", audio: "space" }
+
+export function emptyDoc(kind: Kind, name = DEFAULT_NAME[kind]): ForgeDoc {
   return {
     forge: FORGE_SCHEMA,
     kind,
     meta: {
       id: makeEffectId(name),
       displayName: name,
-      category: kind === "effect" ? "artistic" : "basic",
+      category: DEFAULT_CATEGORY[kind],
       description: "",
       author: "",
       version: "1.0.0",
