@@ -1,7 +1,7 @@
 import type { ForgeDoc } from "@/doc/types"
 import { placeNew } from "./layout"
 import { systemPrompt } from "./prompt"
-import { AGENT_TOOLS, runTool, viewGraph, type ToolSpec } from "./tools"
+import { agentTools, runTool, viewGraph, type ToolSpec } from "./tools"
 
 export interface ToolCall {
   id: string
@@ -145,7 +145,7 @@ export async function runAgent(o: AgentOptions): Promise<AgentRun> {
   const usage = { input: 0, output: 0 }
   const messages: AgentMessage[] = [
     ...(o.history ?? []).map((t): AgentMessage => (t.role === "user" ? { role: "user", text: t.text } : { role: "assistant", text: t.text, calls: [] })),
-    { role: "user", text: `Current graph:\n${viewGraph(doc)}\n\nRequest: ${o.prompt}` },
+    { role: "user", text: `Current ${doc.kind === "audio" ? "board" : "graph"}:\n${viewGraph(doc)}\n\nRequest: ${o.prompt}` },
   ]
 
   let reply = ""
@@ -172,7 +172,7 @@ export async function runAgent(o: AgentOptions): Promise<AgentRun> {
           o.onEvent!({ type: "delta", channel: d.channel, text })
         }
       : undefined
-    const res = await o.adapter.complete({ system: systemPrompt(doc), messages, tools: AGENT_TOOLS, onDelta })
+    const res = await o.adapter.complete({ system: systemPrompt(doc), messages, tools: agentTools(doc.kind), onDelta })
     if (res.usage) {
       usage.input += res.usage.input
       usage.output += res.usage.output

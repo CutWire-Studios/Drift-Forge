@@ -2,6 +2,7 @@
 // (browser) and the MCP server all run these against a ForgeDoc. Results are short plain text to
 // keep token use (and the Workers AI free tier) small.
 import { compile } from "@/compiler/compile"
+import { AUDIO_TOOL_NAMES, AUDIO_TOOLS, runAudioTool, viewRack } from "./audioTools"
 import * as ops from "@/doc/ops"
 import { isParamRef, type ForgeDoc, type GradientStop, type InputValue, type Literal, type Rgba } from "@/doc/types"
 import { hexToRgba } from "@/doc/util"
@@ -172,6 +173,7 @@ export function describeBlock(def: NodeDef): string {
 }
 
 export function viewGraph(doc: ForgeDoc): string {
+  if (doc.kind === "audio") return viewRack(doc)
   const lines = [`${doc.kind} "${doc.meta.displayName}"`]
   for (const n of doc.nodes) {
     const def = nodeDef(n.type)
@@ -295,6 +297,16 @@ const str = (v: unknown) => (typeof v === "string" ? v : "")
 /** Runs one tool call. Never throws: problems come back as text for the model to act on. */
 export function runTool(doc: ForgeDoc, name: string, args: Record<string, unknown>): ToolOutcome {
   const fail = (result: string): ToolOutcome => ({ doc, result, error: true })
+  const shared = name === "set_details" || name === "check"
+  if (doc.kind === "audio" && !shared) {
+    if (!AUDIO_TOOL_NAMES.has(name)) return fail("This is an audio effect: build it with the pedal tools (list_pedals, view_rack, add_pedal…).")
+    try {
+      return runAudioTool(doc, name, args)
+    } catch (e) {
+      return fail(`That failed: ${(e as Error).message}`)
+    }
+  }
+  if (AUDIO_TOOL_NAMES.has(name)) return fail("These tools are for audio effects; this is a video document, built with blocks.")
   try {
     switch (name) {
       case "list_blocks": {
@@ -409,7 +421,9 @@ export function runTool(doc: ForgeDoc, name: string, args: Record<string, unknow
         return {
           doc,
           result: r.ok
-            ? `OK (${r.passes.length} pass${r.passes.length > 1 ? "es" : ""})`
+            ? doc.kind === "audio"
+              ? "OK"
+              : `OK (${r.passes.length} pass${r.passes.length > 1 ? "es" : ""})`
             : `problems: ${r.errors.map((e) => (e.node ? `${e.node}: ` : "") + e.message).join(" | ")}`,
           error: !r.ok,
         }
@@ -422,5 +436,14 @@ export function runTool(doc: ForgeDoc, name: string, args: Record<string, unknow
   }
 }
 
-/** Everything the built-in assistant can call. */
-export const AGENT_TOOLS: ToolSpec[] = [...TOOLS, ...CONVERSATION_TOOLS]
+const SHARED = TOOLS.filter((t) => t.name === "set_details" || t.name === "check")
+
+/** The tools that build a document of this kind. */
+export function toolsFor(kind: ForgeDoc["kind"]): ToolSpec[] {
+  return kind === "audio" ? [...AUDIO_TOOLS, ...SHARED] : TOOLS
+}
+
+/** Everything the built-in assistant can call on a document of this kind. */
+export function agentTools(kind: ForgeDoc["kind"]): ToolSpec[] {
+  return [...toolsFor(kind), ...CONVERSATION_TOOLS]
+}

@@ -5,6 +5,7 @@ import { aiRoutes, type StreamEvent } from "./ai"
 import type { Auth } from "./auth"
 import { config } from "./config"
 import { Ledger } from "./db"
+import { mcpHandler } from "./mcp"
 
 describe("ledger budgets", () => {
   it("refuses a reservation that would pass either budget, and books nothing then", () => {
@@ -152,5 +153,57 @@ describe("hosted AI", () => {
     expect(pending.pending.plan.feasibility).toBe("partly")
     expect(sent).toHaveLength(1)
     expect(done.doc.nodes.length).toBe(doc.nodes.length)
+  })
+})
+
+describe("MCP", () => {
+  function client() {
+    const mcp = mcpHandler(new Ledger(":memory:"))
+    let id = 0
+    const rpc = async (method: string, params: unknown) => {
+      const res = await mcp.fetch(
+        new Request("http://forge/mcp", {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+          body: JSON.stringify({ jsonrpc: "2.0", id: ++id, method, params }),
+        }),
+      )
+      const data = (await res.text()).split("\n").find((l) => l.startsWith("data: "))!
+      return JSON.parse(data.slice(6)).result
+    }
+    const tool = async (name: string, args: Record<string, unknown>) => {
+      const r = await rpc("tools/call", { name, arguments: args })
+      return { text: r.content[0].text as string, error: !!r.isError }
+    }
+    return { rpc, tool }
+  }
+
+  it("builds an audio effect end to end", async () => {
+    const { rpc, tool } = client()
+    await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } })
+    const tools = (await rpc("tools/list", {})).tools.map((t: { name: string; description: string }) => [t.name, t.description])
+    expect(tools.find(([n]: string[]) => n === "add_pedal")[1]).toStartWith("(Audio effects.)")
+
+    const made = await tool("new_document", { kind: "audio", name: "Hallway" })
+    const doc_id = /^doc_id: (\S+)/.exec(made.text)![1]
+    expect(made.text).toContain("(empty: the sound passes through)")
+
+    const added = await tool("add_pedal", { doc_id, type: "convolution", settings: { mix: 0.5 } })
+    const pedal = /^added (\S+)/.exec(added.text)![1]
+    expect((await tool("set_ir", { doc_id, pedal, space: "hall" })).error).toBe(false)
+    expect((await tool("expose_knob", { doc_id, target: pedal, knob: "mix", label: "Wet" })).text).toMatch(/slider \S+ "Wet"/)
+    expect((await tool("add_block", { doc_id, type: "blur" })).error).toBe(true)
+    expect((await tool("check", { doc_id })).text).toBe("OK")
+
+    const code = (await tool("get_shader_code", { doc_id })).text
+    expect(code.startsWith("// audio-effect.json")).toBe(true)
+    expect(code).toContain('"processor": "graph"')
+    expect(code).toContain('"ir": "ir/hall.wav"')
+  })
+
+  it("starts audio effects from a starter", async () => {
+    const { tool } = client()
+    const made = await tool("new_document", { kind: "audio", starter: "Radio voice" })
+    expect(made.text).toMatch(/classic\.bandlimit[\s\S]*drive[\s\S]*classic\.compressor[\s\S]*status: OK/)
   })
 })

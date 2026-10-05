@@ -49,6 +49,18 @@ const TOOL_LABELS: Record<string, string> = {
   expose_setting: "Added a slider",
   set_details: "Named it",
   check: "Checked the result",
+  list_pedals: "Looked through the pedals",
+  describe_pedal: "Read about a pedal",
+  view_rack: "Looked at the board",
+  add_pedal: "Added a pedal",
+  add_split: "Added a split",
+  move_pedal: "Moved a pedal",
+  remove_pedal: "Removed a pedal",
+  set_knob: "Turned a knob",
+  add_modulator: "Added a modulator",
+  route_modulation: "Routed a modulator",
+  set_ir: "Chose a space",
+  expose_knob: "Added a slider",
 }
 
 /** Conversations per document, kept for this tab only. */
@@ -65,6 +77,12 @@ const SUGGESTIONS = [
   "Make it look like an old VHS tape with a slight wobble",
   "A dreamy glow with warm highlights",
   "A glitch that gets stronger on the beat of a pulse",
+]
+
+const AUDIO_SUGGESTIONS = [
+  "Make a voice sound like it's on an old radio in another room",
+  "A slow, wide shimmer that swells behind the sound",
+  "Punchy drums: squash them, but keep the dry hit underneath",
 ]
 
 function adapterFor(s: AiSettings): ModelAdapter | string {
@@ -99,6 +117,7 @@ async function oneUndoStep(work: (apply: (d: ForgeDoc) => void) => Promise<void>
 
 export function AiPanel() {
   const localId = useEditor((s) => s.localId)!
+  const isAudio = useEditor((s) => s.doc?.kind === "audio")
   const [settings, setSettings] = useState(loadSettings)
   const [showSettings, setShowSettings] = useState(false)
   const [showMcp, setShowMcp] = useState(false)
@@ -232,8 +251,10 @@ export function AiPanel() {
           </div>
         ) : lines.length === 0 ? (
           <div className="ai-empty">
-            <p className="meta">Describe what you want and the AI builds it with blocks you can then tweak.</p>
-            {SUGGESTIONS.map((s) => (
+            <p className="meta">
+              Describe what you want and the AI builds it with {isAudio ? "pedals" : "blocks"} you can then tweak.
+            </p>
+            {(isAudio ? AUDIO_SUGGESTIONS : SUGGESTIONS).map((s) => (
               <button key={s} type="button" className="ai-suggestion" onClick={() => void send(s)}>
                 {s}
               </button>

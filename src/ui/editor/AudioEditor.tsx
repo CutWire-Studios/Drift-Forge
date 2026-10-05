@@ -15,9 +15,10 @@ import { Board } from "./audio/Board"
 import { InputDrawer } from "./audio/InputDrawer"
 import { PedalTab } from "./audio/PedalTab"
 import { Transport } from "./audio/Transport"
+import { AiPanel } from "./AiPanel"
 import { SlidersTab } from "./Inspector"
 
-type Tab = "pedal" | "sliders" | "details"
+type Tab = "pedal" | "sliders" | "details" | "ai"
 
 function DetailsTab() {
   const doc = useEditor((s) => s.doc!)
@@ -110,7 +111,7 @@ export function AudioEditor() {
   const params = useEditor((s) => s.doc!.params.length)
 
   useEffect(() => {
-    if (selected.length) setTab("pedal")
+    if (selected.length) setTab((t) => (t === "ai" ? t : "pedal"))
   }, [selected])
 
   // The preview follows the document and the Sliders tab's try-out values.
@@ -164,6 +165,7 @@ export function AudioEditor() {
                 ["pedal", "Selected"],
                 ["sliders", `Sliders${params ? ` (${params})` : ""}`],
                 ["details", "Details & export"],
+                ["ai", "AI"],
               ] as const
             ).map(([id, label]) => (
               <button key={id} type="button" role="tab" aria-selected={tab === id} className="tab" onClick={() => setTab(id)}>
@@ -175,6 +177,7 @@ export function AudioEditor() {
             {tab === "pedal" && <PedalTab />}
             {tab === "sliders" && <SlidersTab />}
             {tab === "details" && <DetailsTab />}
+            {tab === "ai" && <AiPanel />}
           </div>
         </section>
       </div>

@@ -1,4 +1,5 @@
 import type { ForgeDoc } from "@/doc/types"
+import { audioSystemPrompt } from "./audioPrompt"
 import { runTool } from "./tools"
 
 /**
@@ -6,6 +7,7 @@ import { runTool } from "./tools"
  * cannot add to it or replace it.
  */
 export function systemPrompt(doc: ForgeDoc): string {
+  if (doc.kind === "audio") return audioSystemPrompt(doc)
   const kind = doc.kind
   const catalog = runTool(doc, "list_blocks", {}).result
   return `You are the builder inside Drift Forge, a node-graph editor for video ${kind}s used in the Drift video editor. You change the user's ${kind} only by calling the tools. You do nothing else: if a request isn't about building or changing this ${kind}, reply in one sentence that you can only help build Drift effects and transitions, and call no tools.

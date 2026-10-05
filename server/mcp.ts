@@ -3,13 +3,15 @@
 // unguessable doc_id and leave as a share link that opens in Forge.
 import { createMcpHandler, fromJsonSchema, McpServer, type JsonSchemaType } from "@modelcontextprotocol/server"
 import { placeNew } from "@/ai/layout"
+import { AUDIO_TOOLS } from "@/ai/audioTools"
 import { runTool, TOOLS, viewGraph } from "@/ai/tools"
 import { compile } from "@/compiler/compile"
-import { packageJson } from "@/compiler/manifest"
+import { packageJson, packageJsonName } from "@/compiler/manifest"
 import type { ForgeDoc } from "@/doc/types"
 import { makeEffectId } from "@/doc/util"
 import { decodeLinkPayload, encodeLinkPayload, LINK_LIMIT, parseForgeDoc } from "@/export/link"
 import { STARTERS } from "@/starters"
+import { AUDIO_STARTERS } from "@/starters/audio"
 import { config } from "./config"
 import type { Ledger } from "./db"
 
@@ -56,22 +58,23 @@ export function mcpHandler(ledger: Ledger) {
       "new_document",
       {
         description:
-          "Start a new Drift effect or transition. Optionally begin from a starter. Returns a doc_id for the other tools. Effects start from the Video block; transitions from From/To/Progress.",
-        inputSchema: schema<{ kind: "effect" | "transition"; name?: string; starter?: string }>({
+          "Start a new Drift video effect, transition or audio effect. Optionally begin from a starter. Returns a doc_id for the other tools. Effects start from the Video block; transitions from From/To/Progress; audio effects are a pedalboard built with the audio tools.",
+        inputSchema: schema<{ kind: "effect" | "transition" | "audio"; name?: string; starter?: string }>({
           type: "object",
           properties: {
-            kind: { type: "string", enum: ["effect", "transition"] },
+            kind: { type: "string", enum: ["effect", "transition", "audio"] },
             name: { type: "string" },
-            starter: { type: "string", description: `One of: ${STARTERS.map((s) => s.name).join(", ")}` },
+            starter: { type: "string", description: `One of: ${[...STARTERS, ...AUDIO_STARTERS].map((s) => s.name).join(", ")}` },
           },
           required: ["kind"],
           additionalProperties: false,
         }),
       },
-      async (args: { kind: "effect" | "transition"; name?: string; starter?: string }) => {
+      async (args: { kind: "effect" | "transition" | "audio"; name?: string; starter?: string }) => {
+        const starters = [...STARTERS, ...AUDIO_STARTERS]
         const pick =
-          STARTERS.find((s) => s.doc.kind === args.kind && s.name.toLowerCase() === (args.starter ?? "").toLowerCase()) ??
-          STARTERS.find((s) => s.doc.kind === args.kind && s.name.startsWith("Blank"))!
+          starters.find((s) => s.doc.kind === args.kind && s.name.toLowerCase() === (args.starter ?? "").toLowerCase()) ??
+          starters.find((s) => s.doc.kind === args.kind && s.name.startsWith("Blank"))!
         const doc = structuredClone(pick.doc)
         if (args.name) doc.meta.displayName = args.name.slice(0, 60)
         doc.meta.id = makeEffectId(doc.meta.displayName)
@@ -94,7 +97,11 @@ export function mcpHandler(ledger: Ledger) {
       },
     )
 
-    for (const tool of TOOLS) {
+    // Both tool sets are offered; each says which kind of document it builds, and the other kind's
+    // tools refuse with a pointer to the right ones.
+    const shared = new Set(["set_details", "check"])
+    const forKind = (name: string, audio: boolean) => (shared.has(name) ? "" : audio ? "(Audio effects.) " : "(Video effects and transitions.) ")
+    for (const tool of [...TOOLS.map((t) => ({ t, audio: false })), ...AUDIO_TOOLS.map((t) => ({ t, audio: true }))].map(({ t, audio }) => ({ ...t, description: forKind(t.name, audio) + t.description }))) {
       server.registerTool(
         tool.name,
         { description: tool.description, inputSchema: schema<Record<string, unknown>>(withDocId(tool.parameters)) },
@@ -131,7 +138,7 @@ export function mcpHandler(ledger: Ledger) {
     server.registerTool(
       "get_shader_code",
       {
-        description: "Show the GLSL and effect.json/transition.json Drift will run for this document.",
+        description: "Show what Drift will run for this document: effect.json/transition.json and its GLSL, or an audio effect's audio-effect.json.",
         inputSchema: schema<{ doc_id: string }>(withDocId({ type: "object", properties: {} })),
       },
       async (args: { doc_id: string }) => {
@@ -140,7 +147,7 @@ export function mcpHandler(ledger: Ledger) {
         const r = compile(cur.doc, { mode: "export" })
         if (!r.ok) return text(`problems: ${r.errors.map((e) => e.message).join(" | ")}`, true)
         const out = [
-          `// ${cur.doc.kind}.json`,
+          `// ${packageJsonName(cur.doc)}`,
           JSON.stringify(packageJson(cur.doc, r), null, 2),
           ...r.passes.flatMap((p) => [`// ${p.file}`, p.source]),
         ].join("\n\n")
