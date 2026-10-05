@@ -106,6 +106,21 @@ export const controlNodes: NodeDef[] = [
     emit: (c) => ({ image: `return ${c.clip("uv")};` }),
   },
   {
+    type: "clip_mask",
+    label: "Clip mask",
+    category: "input",
+    description:
+      "The masks on the clip in Drift, such as Cut out subject: 1 inside, 0 outside. The effect takes the mask over, so Drift stops cutting the clip out with it. In a transition, the outgoing clip's mask.",
+    next: true,
+    cheap: true,
+    inputs: [],
+    outputs: [
+      { id: "mask", label: "Mask", type: "float" },
+      { id: "has", label: "Has a mask", type: "float" },
+    ],
+    emit: (c) => ({ mask: `return ${c.mask("uv")};`, has: `return ${c.hasMask()};` }),
+  },
+  {
     type: "audio",
     label: "Music",
     category: "input",

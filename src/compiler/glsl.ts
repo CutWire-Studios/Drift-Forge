@@ -42,6 +42,8 @@ export const GLSL_RESERVED = new Set(
     "radians degrees sin cos tan asin acos atan pow exp log exp2 log2 sqrt inversesqrt abs sign floor ceil fract mod min max clamp mix step smoothstep length distance dot cross normalize reflect refract texture transpose determinant inverse round trunc " +
     // file-scope names generated code declares; locals can't clash because parameters are read
     // through pv_<name>() accessors
-    "hash11 hash21 hash22 valueNoise fbm over luma rgb2hsv hsv2rgb rot2 rotX rotY rotZ rot3 cross2 invBilinear rayQuad rgb2ycc blendOverlay blendSoftLight easeOutBounce main uv fragColor v_texCoord"
+    "hash11 hash21 hash22 valueNoise fbm over luma rgb2hsv hsv2rgb rot2 rotX rotY rotZ rot3 cross2 invBilinear rayQuad rgb2ycc blendOverlay blendSoftLight easeOutBounce main uv fragColor v_texCoord " +
+    // Drift's mask prelude
+    "driftMask u_clipMask u_hasClipMask"
   ).split(/\s+/),
 )

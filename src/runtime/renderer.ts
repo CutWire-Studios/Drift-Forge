@@ -1,7 +1,7 @@
 import type { CompileResult } from "@/compiler/compile"
 import type { ParamDef, ParamDefault, SocketType } from "@/doc/types"
 import { hexToRgba } from "@/doc/util"
-import { esSource, QUAD_VERTEX_SHADER } from "./translate"
+import { CLIP_MASK_UNIT, esSource, MASK_PRELUDE, QUAD_VERTEX_SHADER } from "./translate"
 
 export type UniformValue = number | number[]
 
@@ -19,6 +19,8 @@ export interface FrameInput {
   engine?: Record<string, number>
   /** Texture for a sampler parameter (image, clip, gradient, curve), by identifier. */
   paramTexture?: (identifier: string) => WebGLTexture | null
+  /** The clip's mask coverage for "requires": "mask" packages; null means the clip has none. */
+  clipMask?: WebGLTexture | null
 }
 
 interface Program {
@@ -82,8 +84,9 @@ void main() {
   }
 
   /** Compiles (or fetches) a package fragment shader; returns the error log on failure. */
-  program(fragment: string): Program | string {
-    const cached = this.programs.get(fragment)
+  program(fragment: string, prelude = ""): Program | string {
+    const key = prelude + fragment
+    const cached = this.programs.get(key)
     if (cached) return cached
     const gl = this.gl
     const compileShader = (type: number, src: string) => {
@@ -98,7 +101,7 @@ void main() {
       return s
     }
     const vs = compileShader(gl.VERTEX_SHADER, esSource(QUAD_VERTEX_SHADER, false))
-    const fs = compileShader(gl.FRAGMENT_SHADER, esSource(fragment))
+    const fs = compileShader(gl.FRAGMENT_SHADER, esSource(fragment, true, prelude))
     let result: Program | string
     if (typeof vs === "string") result = vs
     else if (typeof fs === "string") result = fs
@@ -114,7 +117,7 @@ void main() {
         : (gl.getProgramInfoLog(p) ?? "link error")
     }
     if (this.programs.size > 400) this.dropPrograms()
-    this.programs.set(fragment, result)
+    this.programs.set(key, result)
     return result
   }
 
@@ -182,7 +185,7 @@ void main() {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
   }
 
-  /** Uploads a package image flipped, with GL_REPEAT, matching GlRuntime's staticTexture. */
+  /** Uploads a package image with GL_REPEAT, row 0 at v=0, matching GlRuntime's staticTexture. */
   setAsset(assetId: string, image: TexImageSource) {
     const gl = this.gl
     let t = this.assets.get(assetId)
@@ -191,9 +194,8 @@ void main() {
       this.assets.set(assetId, t)
     }
     gl.bindTexture(gl.TEXTURE_2D, t)
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
   }
 
   hasAsset(assetId: string): boolean {
@@ -243,7 +245,7 @@ void main() {
     const gl = this.gl
     const programs: Program[] = []
     for (const pass of compiled.passes) {
-      const p = this.program(pass.source)
+      const p = this.program(pass.source, compiled.usesMask ? MASK_PRELUDE : "")
       if (typeof p === "string") return p
       programs.push(p)
     }
@@ -293,6 +295,14 @@ void main() {
         if (loc) gl.uniform1i(loc, unit)
       })
       for (const [name, v] of Object.entries(frame.engine ?? {})) this.setValue(this.uniform(prog, name), v)
+      if (compiled.usesMask) {
+        gl.activeTexture(gl.TEXTURE0 + CLIP_MASK_UNIT)
+        gl.bindTexture(gl.TEXTURE_2D, frame.clipMask ?? null)
+        gl.activeTexture(gl.TEXTURE0)
+        const loc = this.uniform(prog, "u_clipMask")
+        if (loc) gl.uniform1i(loc, CLIP_MASK_UNIT)
+        this.setValue(this.uniform(prog, "u_hasClipMask"), frame.clipMask ? 1 : 0)
+      }
 
       for (const def of frame.params) {
         const v = frame.paramValues[def.identifier] ?? def.default

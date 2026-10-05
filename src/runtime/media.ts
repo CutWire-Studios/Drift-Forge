@@ -6,15 +6,25 @@ export interface MediaItem {
   kind: "image" | "video" | "pattern"
   url?: string
   pattern?: PatternKind
+  /** Id of the sample holding this clip's person matte (white person on black). */
+  matte?: string
   /** User uploads stay as object URLs in this tab only. */
   user?: boolean
 }
 
 const photo = (id: string, label: string): MediaItem => ({ id, label, kind: "image", url: `/samples/${id}.jpg` })
+const person = (id: string, label: string): MediaItem[] => [
+  { id, label: `${label} (clip)`, kind: "video", url: `/samples/${id}.mp4`, matte: `${id}-matte` },
+  { id: `${id}-matte`, label: `${label} (matte)`, kind: "video", url: `/samples/${id}-matte.mp4` },
+]
 
 export const SAMPLES: MediaItem[] = [
   { id: "mountains-push", label: "Mountains (clip)", kind: "video", url: "/samples/mountains-push.mp4" },
   { id: "city-pan", label: "City at night (clip)", kind: "video", url: "/samples/city-pan.mp4" },
+  ...person("dancer", "Dancer"),
+  ...person("flower-portrait", "Woman with a flower"),
+  ...person("stage-model", "Model on stage"),
+  ...person("park-walk", "Walk in the park"),
   photo("landscape", "Lake"),
   photo("portrait", "Portrait"),
   photo("neon", "Neon sign"),
@@ -28,6 +38,8 @@ export const SAMPLES: MediaItem[] = [
   { id: "gradient", label: "Gradient", kind: "pattern", pattern: "gradient" },
   { id: "checker", label: "Checker", kind: "pattern", pattern: "checker" },
 ]
+
+export const sample = (id: string) => SAMPLES.find((m) => m.id === id)!
 
 export type MediaElement = HTMLImageElement | HTMLVideoElement | HTMLCanvasElement
 

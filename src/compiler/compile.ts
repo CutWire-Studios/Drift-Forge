@@ -47,6 +47,8 @@ export interface CompileResult {
   /** Preview mode only: unconnected inputs become uniforms so sliders don't recompile. */
   literals: LiteralUniform[]
   usesTime: boolean
+  /** Reads the clip's masks: the package declares "requires": "mask" and Drift adds the prelude. */
+  usesMask?: boolean
 }
 
 export const SAMPLER_PARAM_TYPES = new Set(["image", "clip", "gradient", "curve"])
@@ -135,6 +137,7 @@ class Compiler {
   private order: PassBuild[] = []
   private building = new Set<string>()
   private usesTime = false
+  private usesMask = false
   private kind: Kind
 
   constructor(
@@ -346,10 +349,17 @@ class Compiler {
         p.engines.add(name)
         return name
       },
+      mask: (uv) => {
+        self.usesMask = true
+        return `driftMask(${uv})`
+      },
+      hasMask: () => {
+        self.usesMask = true
+        return "u_hasClipMask"
+      },
       asset: (uv, option = "asset") => {
         const ref = node.data[option]
         if (isParamRef(ref) && !Array.isArray(ref.param)) {
-          // Picture parameters are uploaded like clip frames (next Drift), so no flip here.
           self.useParam(p, node, ref.param)
           return `texture(${ref.param}, ${uv})`
         }
@@ -358,9 +368,7 @@ class Compiler {
           self.fail(node.id, "Pick a picture for this node.")
         }
         const s = self.sampler(p, { kind: "asset", assetId: assetId! })
-        // Drift uploads package images flipped vertically (GlRuntime staticTexture), unlike video
-        // frames, so v is mirrored here to keep 0 at the image's top row in both.
-        return `texture(${s}, vec2((${uv}).x, 1.0 - (${uv}).y))`
+        return `texture(${s}, ${uv})`
       },
       declare: (text) => {
         if (declared.has(text)) return
@@ -492,6 +500,7 @@ class Compiler {
       textures,
       literals: [...literals.values()],
       usesTime: this.usesTime,
+      usesMask: this.usesMask,
     }
   }
 

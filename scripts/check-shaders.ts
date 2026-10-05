@@ -5,7 +5,7 @@ import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { compile } from "@/compiler/compile"
-import { esSource } from "@/runtime/translate"
+import { esSource, withMaskPrelude } from "@/runtime/translate"
 import type { ForgeDoc, Kind, ParamDef } from "@/doc/types"
 import { emptyDoc } from "@/doc/util"
 import { availableFor, createNode, NODE_DEFS, outputType } from "@/nodes/registry"
@@ -40,7 +40,7 @@ function checkDoc(label: string, doc: ForgeDoc) {
       console.error(`FAIL ${label} (${mode}): ${r.errors.map((e) => e.message).join("; ")}`)
       continue
     }
-    for (const p of r.passes) validateGlsl(`${label} ${mode} ${p.file}`, p.source)
+    for (const p of r.passes) validateGlsl(`${label} ${mode} ${p.file}`, r.usesMask ? withMaskPrelude(p.source) : p.source)
   }
 }
 

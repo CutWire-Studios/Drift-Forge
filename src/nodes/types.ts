@@ -98,6 +98,10 @@ export interface EmitCtx {
   asset(uv: string, option?: string): string
   /** Samples the clip chosen in this node's clip parameter (next Drift). */
   clip(uv: string): string
+  /** Coverage of the clip's Drift masks at `uv`, 1 inside (next Drift, "requires": "mask"). */
+  mask(uv: string): string
+  /** 1 when the clip has a mask at all, else 0. */
+  hasMask(): string
   /** A per-frame engine value only the next Drift provides. */
   engine(name: EngineUniform): string
   /** Declares a file-scope function or constant; text must already use `prefix` for its names. */

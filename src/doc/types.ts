@@ -132,6 +132,8 @@ export interface ForgeDoc {
     thumbTime: number
     /** png data URL of a user-supplied thumbnail, replacing the rendered one */
     customThumb?: string
+    /** Sample clip the editor previews on when the document opens (runtime/media SAMPLES id) */
+    clip?: string
   }
 }
 

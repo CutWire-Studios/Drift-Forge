@@ -21,6 +21,7 @@ import { AiPanel } from "./AiPanel"
 import { CodeEditor } from "./CodeEditor"
 import { CurveEditor } from "./CurveEditor"
 import { InputControl } from "./InputControl"
+import { SourcePicker } from "./PreviewPanel"
 import { SOCKET_NAMES } from "./NodeView"
 import { GradientEditor, LabelsEditor, RegionPad, SeedInput } from "./controls"
 import { ColorSwatch, PointPad, ScrubNumber, Toggle } from "./widgets"
@@ -111,6 +112,7 @@ function NodeDetails({ node }: { node: ForgeNode }) {
   const doc = useEditor((s) => s.doc!)
   const { expose, disconnect, removeNodes, duplicateNodes } = useEditor.getState()
   const cat = CATEGORIES.find((c) => c.id === def.category)
+  const preview = node.type === "to" ? 1 : node.type === "video" || node.type === "from" ? 0 : undefined
 
   return (
     <div className="node-details">
@@ -119,6 +121,14 @@ function NodeDetails({ node }: { node: ForgeNode }) {
         <h3>{def.label}</h3>
         <p className="meta">{def.description}</p>
       </div>
+
+      {preview !== undefined && (
+        <>
+          <h4 className="section-title">Preview</h4>
+          <SourcePicker index={preview} label="Preview clip" />
+          <p className="meta small">Only for the preview here. In Drift this is the clip the {doc.kind} is used on.</p>
+        </>
+      )}
 
       {def.options?.map((o) => <OptionControl key={o.id} node={node} option={o} />)}
 
@@ -437,7 +447,7 @@ function SlidersTab() {
 }
 
 function Presets() {
-  const presets = useEditor((s) => s.doc!.presets ?? [])
+  const presets = useEditor((s) => s.doc!.presets) ?? []
   const { savePreset, applyPreset, deletePreset } = useEditor.getState()
   const [name, setName] = useState("")
   return (

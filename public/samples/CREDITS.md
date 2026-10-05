@@ -1,6 +1,17 @@
 # Sample media
 
-Photos are CC0 1.0 (Unsplash photos mirrored on Wikimedia Commons), downscaled. The two clips are slow pans/zooms rendered from mountains.jpg and city-night.jpg with ffmpeg.
+Photos are CC0 1.0 (Unsplash photos mirrored on Wikimedia Commons), downscaled. The mountains and city clips are slow pans/zooms rendered from mountains.jpg and city-night.jpg with ffmpeg.
+
+The people clips are 5-second cuts from Mixkit stock videos under the [Mixkit Stock Video Free License](https://mixkit.co/license/#videoFree), re-encoded at 960 px without audio. Each `*-matte.mp4` is the same clip with the background removed, as a white-on-black person matte made with [rembg](https://github.com/danielgatis/rembg) (`u2net_human_seg`).
+
+| File | Mixkit video |
+| --- | --- |
+| `dancer.mp4` | [Vertical video with a colorful performance of a young woman dancer wearing a white attire (51275)](https://mixkit.co/free-stock-video/vertical-video-with-a-colorful-performance-of-a-young-woman-51275/) |
+| `flower-portrait.mp4` | [Fashion model with sunglasses and a flower (43178)](https://mixkit.co/free-stock-video/fashion-model-with-sunglasses-and-a-flower-43178/) |
+| `stage-model.mp4` | [Girl posing on a stage (47492)](https://mixkit.co/free-stock-video/girl-posing-on-a-stage-47492/) |
+| `park-walk.mp4` | [Girl dancing with her headphones while taking a walk (4823)](https://mixkit.co/free-stock-video/girl-dancing-with-her-headphones-while-taking-a-walk-4823/) |
+
+## Photos
 
 | File | Photo | Author | License |
 | --- | --- | --- | --- |

@@ -93,10 +93,8 @@ transitions). Every intermediate buffer has `scale: 1.0`.
 
 ### Static texture orientation
 
-`GlRuntime::staticTexture` uploads package images flipped vertically, while clip frames are not.
-Forge's shaders therefore sample package images at `vec2(uv.x, 1.0 - uv.y)` so row 0 of the PNG is
-the top of the frame, matching clip frames. If Drift ever changes `staticTexture`, Forge needs a
-matching change (and documents written before then would need the flip toggled on import).
+`GlRuntime::staticTexture` uploads package images unflipped, like clip frames: row 0 of the PNG is
+at v = 0 (the top). Forge's shaders sample them at `uv` directly.
 
 ## Suggested import flow for Drift
 

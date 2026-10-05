@@ -91,6 +91,7 @@ export function nextFeatures(doc: ForgeDoc, compiled: CompileResult): string[] {
   for (const pass of compiled.passes) {
     if (/\bu_audio(Level|Bass|Beat)\b/.test(pass.source)) f.add("uniform:audio")
   }
+  if (compiled.usesMask) f.add("requires:mask")
   return [...f].sort()
 }
 
@@ -123,6 +124,7 @@ export function packageJson(doc: ForgeDoc, compiled: CompileResult): Record<stri
   if (doc.meta.description) json.description = doc.meta.description
   if (doc.kind === "effect") json.backend = "gpu"
   else json.audioCurve = "crossfade"
+  if (compiled.usesMask) json.requires = "mask"
   json.parameters = doc.params.map((p) => paramEntry(doc, p))
   json.pipeline = pipeline
   if (doc.presets?.length) {

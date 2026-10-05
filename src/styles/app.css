@@ -636,6 +636,11 @@ select.input {
   --xy-selection-border: 1px solid var(--accent);
 }
 
+/* base.css caps svg at max-width: 100%, and the edges container is 0x0, so Chrome drew no edges. */
+.graph .react-flow__edges svg {
+  max-width: none;
+}
+
 .graph .react-flow__edge.selected .react-flow__edge-path,
 .graph .react-flow__edge:hover .react-flow__edge-path {
   stroke-width: 4;
@@ -1240,6 +1245,8 @@ select.input {
 .source-picker select {
   min-height: 30px;
   font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
 }
 
 .fps {

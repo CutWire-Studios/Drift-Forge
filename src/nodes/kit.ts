@@ -287,7 +287,7 @@ export const kitOverlayNodes: NodeDef[] = [
         float col = floor(x);
         float h = hash11(col * 1.37 + fl * 91.7 + ${c.in("seed")});
         if (h > ${c.in("amount")}) continue;
-        float y = q.y + ${c.in("t")} * ${c.in("speed")} * (1.2 + fl * 0.5 + h) + hash11(col + 5.1) * 7.0;
+        float y = q.y - ${c.in("t")} * ${c.in("speed")} * (1.2 + fl * 0.5 + h) + hash11(col + 5.1) * 7.0;
         float seg = fract(y / (${c.in("length")} * (3.0 + fl)));
         float streak = smoothstep(0.0, 0.2, seg) * (1.0 - smoothstep(0.25, 0.3, seg));
         float thin = 1.0 - smoothstep(0.05, 0.25, abs(fract(x) - 0.5));

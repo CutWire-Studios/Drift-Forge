@@ -44,8 +44,8 @@ All parameters are still bound by uniform name = `identifier`, as today.
 - A pass that declares `uniform sampler2D <identifier>;` gets it bound by Drift. Use the texture
   units **after** the pass's `inputs` (unit `inputs.length`, then `+1`…), in the order the
   parameters appear in `parameters`.
-- `image` and `clip` textures are oriented like clip frames: row 0 at v = 0 (the top). This is
-  unlike `pipeline.textures`, which `staticTexture` uploads flipped.
+- `image` and `clip` textures are oriented like clip frames and `pipeline.textures`: row 0 at
+  v = 0 (the top).
 - `image`: CLAMP_TO_EDGE, LINEAR. The default file is resolved relative to the package folder.
 - `clip`: the chosen clip's frame at the same timeline time, rendered canvas-sized with its own
   transform and effects, the same way a transition's inputs are. Bind a transparent texture when
@@ -75,3 +75,21 @@ Drift already detects onsets for effect templates (`AppController.cpp:20040-2009
 pulse can reuse them. Transitions may read these too: they are a function of timeline time, not
 of `u_time`, so they don't break the determinism rule for transitions. Forge's preview
 approximates them with WebAudio (`src/runtime/audio.ts`).
+
+## Clip mask (`"requires": "mask"`)
+
+Written when a graph uses the Clip mask block; listed in `nextFeatures` as `requires:mask`. Drift
+implements it (`kMaskPrelude` in `GlRuntime.cpp`, see Drift's `docs/gpu-effects.md`, "Mask
+effects"). Drift compiles a prelude into every pass, so package shaders call these without
+declaring them:
+
+| Name | Meaning |
+| --- | --- |
+| `float driftMask(vec2 uv)` | coverage of every mask pinned to the clip (Cut out subject, shapes), folded with feather, invert and the combine ops: 1 inside, 0 outside, 0 everywhere without a mask |
+| `u_hasClipMask` | 1 when the clip has a mask, else 0 |
+| `u_clipMask` | the folded coverage in `.r`, on texture unit 9 |
+
+The package takes the masks over: the clip is drawn whole rather than cut out, and a cutout's
+decontaminated foreground is not used. A transition reads the outgoing clip's masks, laid out on
+the canvas. Forge's preview binds the Clip mask preview source (a sample clip's matte) in their
+place and splices the same prelude in (`MASK_PRELUDE` in `src/runtime/translate.ts`).

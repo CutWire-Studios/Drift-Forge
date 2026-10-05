@@ -4,7 +4,7 @@ import { base64ToBytes } from "@/doc/util"
 import { nodeDef } from "@/nodes/registry"
 import { AUDIO_SAMPLES, AudioFollower } from "./audio"
 import { LOOKUP_WIDTH, lookupPixels } from "./lookup"
-import { FrameCanvas, loadMedia, SAMPLES, type LoadedMedia, type MediaItem } from "./media"
+import { FrameCanvas, loadMedia, sample, SAMPLES, type LoadedMedia, type MediaItem } from "./media"
 import { DriftRenderer, type FrameInput, type UniformValue } from "./renderer"
 
 export type Aspect = "16:9" | "9:16" | "1:1" | "4:5"
@@ -19,6 +19,8 @@ export interface EngineStatus {
   fps: number
   error: string | null
   nodeErrors: Record<string, string>
+  /** MediaItem ids of the three preview sources */
+  sources: [string, string, string]
 }
 
 interface Thumb {
@@ -92,7 +94,7 @@ export class PreviewEngine {
 
   /** 0: the clip (effects) / From, 1: To, 2: the "other clip" next-Drift clip parameters sample */
   private media: [LoadedMedia | null, LoadedMedia | null, LoadedMedia | null] = [null, null, null]
-  private sourceItems: [MediaItem, MediaItem, MediaItem] = [SAMPLES[0], SAMPLES[1], SAMPLES[4]]
+  private sourceItems: [MediaItem, MediaItem, MediaItem] = [sample("mountains-push"), sample("city-pan"), sample("neon")]
   aspect: Aspect = "16:9"
 
   private playing = true
@@ -104,7 +106,15 @@ export class PreviewEngine {
   private raf = 0
   private frames = 0
   private fpsStamp = 0
-  private status: EngineStatus = { playing: true, position: 0, duration: 4, fps: 0, error: null, nodeErrors: {} }
+  private status: EngineStatus = {
+    playing: true,
+    position: 0,
+    duration: 4,
+    fps: 0,
+    error: null,
+    nodeErrors: {},
+    sources: [this.sourceItems[0].id, this.sourceItems[1].id, this.sourceItems[2].id],
+  }
   private listeners = new Set<(s: EngineStatus) => void>()
   private lastEmit = 0
 
@@ -136,6 +146,9 @@ export class PreviewEngine {
   }
 
   setDoc(doc: ForgeDoc) {
+    // A document can name the sample it previews on; a Clip mask one needs a clip with a matte.
+    const preview = previewClip(doc)
+    if (preview && doc.meta.id !== this.doc?.meta.id) void this.setSource(0, preview)
     this.doc = doc
     const key = structureKey(doc)
     if (key !== this.key) {
@@ -182,6 +195,11 @@ export class PreviewEngine {
 
   async setSource(index: 0 | 1 | 2, item: MediaItem) {
     this.sourceItems[index] = item
+    if (this.status.sources[index] !== item.id) {
+      this.status.sources = this.sourceItems.map((m) => m.id) as EngineStatus["sources"]
+      this.emit(true)
+    }
+    if (index === 0 && item.matte) void this.setSource(2, sample(item.matte))
     const prev = this.media[index]
     const m = await loadMedia(item)
     if (this.sourceItems[index] !== item) return
@@ -285,7 +303,21 @@ export class PreviewEngine {
     const [w, h] = this.frameSize()
     if (this.media[0]) this.renderer.setSource(0, this.frameA.draw(this.media[0], w, h))
     if (doc.kind === "transition" && this.media[1]) this.renderer.setSource(1, this.frameB.draw(this.media[1], w, h))
-    if (this.media[2] && doc.params.some((p) => p.type === "clip")) this.renderer.setSource(2, this.frameC.draw(this.media[2], w, h))
+    const other = this.media[2]
+    const mask = usesClipMask(doc)
+    if (other && (mask || doc.params.some((p) => p.type === "clip"))) {
+      const v = this.effectVideo()
+      const m = other.el
+      // A matte must stay frame-locked to its clip. Seeking every frame never settles (the clip
+      // moves on while the matte seeks) and a seeking video draws blank, so small drift is
+      // closed by nudging the playback rate and only big jumps (the loop wrapping) seek.
+      if (v && m instanceof HTMLVideoElement && other.item.id === this.media[0]?.item.matte) {
+        const drift = v.currentTime - m.currentTime
+        if (!m.seeking && (Math.abs(drift) > 0.5 || (v.paused && Math.abs(drift) > 0.02))) m.currentTime = v.currentTime
+        else m.playbackRate = 1 + Math.max(-0.5, Math.min(0.5, drift * 2))
+      }
+      if (!(m instanceof HTMLVideoElement && (m.seeking || m.readyState < 2))) this.renderer.setSource(2, this.frameC.draw(other, w, h))
+    }
     const engineValues = this.audio.sample(ts)
     const textures = paramTextures(this.renderer, doc, this.paramValues)
 
@@ -299,6 +331,7 @@ export class PreviewEngine {
       literals: this.literals,
       engine: engineValues,
       paramTexture: textures,
+      clipMask: mask && other ? this.renderer.sourceTexture(2) : null,
     })
     const assetOf = (compiled: CompileResult) => (texId: string) =>
       compiled.textures.find((t) => t.id === texId)?.assetId ?? ""
@@ -388,6 +421,7 @@ export class PreviewEngine {
       paramValues: {},
       literals: {},
       paramTexture: paramTextures(this.renderer, doc, {}),
+      clipMask: usesClipMask(doc) && this.media[2] ? this.renderer.sourceTexture(2) : null,
     }
     if (doc.kind === "effect") {
       const size = 256
@@ -412,12 +446,28 @@ export class PreviewEngine {
   }
 }
 
+function usesClipMask(doc: ForgeDoc) {
+  return doc.nodes.some((n) => n.type === "clip_mask")
+}
+
+/** The sample `doc` asks to preview on; a Clip mask document falls back to one with a matte. */
+function previewClip(doc: ForgeDoc): MediaItem | null {
+  const named = SAMPLES.find((m) => m.id === doc.preview.clip)
+  if (usesClipMask(doc)) return named?.matte ? named : sample("dancer")
+  return named ?? null
+}
+
 /** A still of `doc` on the sample photos, for cards that aren't open in the editor. */
 export async function renderCardThumb(doc: ForgeDoc, width = 320, height = 180): Promise<string | null> {
   const e = getEngine()
   const compiled = compile(doc, { mode: "export" })
   if (!compiled.ok) return null
-  const [a, b] = await Promise.all([loadMedia(SAMPLES[2]), loadMedia(SAMPLES[6])])
+  const preview = previewClip(doc)
+  const [a, b, m] = await Promise.all([
+    loadMedia(preview ?? sample("landscape")),
+    loadMedia(sample("city-night")),
+    preview?.matte ? loadMedia(sample(preview.matte)) : null,
+  ])
   for (const asset of doc.assets) {
     if (!e.renderer.hasAsset(asset.id)) {
       const blob = new Blob([base64ToBytes(asset.data) as Uint8Array<ArrayBuffer>], { type: asset.mime })
@@ -430,6 +480,7 @@ export async function renderCardThumb(doc: ForgeDoc, width = 320, height = 180):
   const fb = new FrameCanvas()
   e.renderer.setSource(0, fa.draw(a, width, height))
   e.renderer.setSource(1, fb.draw(b, width, height))
+  if (m) e.renderer.setSource(2, new FrameCanvas().draw(m, width, height))
   const img = e.renderer.readPixels(
     compiled,
     {
@@ -441,6 +492,7 @@ export async function renderCardThumb(doc: ForgeDoc, width = 320, height = 180):
       paramValues: {},
       literals: {},
       paramTexture: paramTextures(e.renderer, doc, {}),
+      clipMask: m && usesClipMask(doc) ? e.renderer.sourceTexture(2) : null,
     },
     (texId) => compiled.textures.find((t) => t.id === texId)?.assetId ?? "",
   )

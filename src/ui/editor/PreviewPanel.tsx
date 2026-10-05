@@ -9,15 +9,12 @@ import { fmt } from "./widgets"
 
 const uploads: MediaItem[] = []
 
-function SourcePicker({ index, label }: { index: 0 | 1 | 2; label: string }) {
+export function SourcePicker({ index, label }: { index: 0 | 1 | 2; label: string }) {
   const engine = getEngine()
-  const [current, setCurrent] = useState(engine.sources()[index].id)
+  const current = useEngineStatus((s) => s.sources[index]) || engine.sources()[index].id
   const file = useRef<HTMLInputElement>(null)
   const all = [...SAMPLES, ...uploads]
-  const choose = (item: MediaItem) => {
-    setCurrent(item.id)
-    void engine.setSource(index, item)
-  }
+  const choose = (item: MediaItem) => void engine.setSource(index, item)
   return (
     <label className="source-picker">
       <span>{label}</span>
@@ -146,6 +143,7 @@ export function PreviewPanel({ kind, expanded, onToggleExpand }: { kind: Kind; e
   const [aspect, setAspect] = useState<Aspect>(engine.aspect)
   const [transDur, setTransDur] = useState(engine.transitionDuration)
   const usesClip = useEditor((s) => s.doc!.params.some((p) => p.type === "clip"))
+  const usesMask = useEditor((s) => s.doc!.nodes.some((n) => n.type === "clip_mask"))
   const usesAudio = useEditor((s) => s.doc!.nodes.some((n) => n.type === "audio"))
 
   return (
@@ -204,7 +202,7 @@ export function PreviewPanel({ kind, expanded, onToggleExpand }: { kind: Kind; e
       <div className="preview-sources">
         <SourcePicker index={0} label={kind === "effect" ? "Preview on" : "From"} />
         {kind === "transition" && <SourcePicker index={1} label="To" />}
-        {usesClip && <SourcePicker index={2} label="Other clip" />}
+        {(usesClip || usesMask) && <SourcePicker index={2} label={usesClip ? "Other clip" : "Clip mask"} />}
         {usesAudio && <MusicPicker />}
         <label className="source-picker narrow">
           <span>Shape</span>
