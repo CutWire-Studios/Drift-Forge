@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { irFiles } from "@/audio/irs"
 import { audioPreview } from "@/audio/preview/AudioPreview"
 import { defaultInput } from "@/audio/preview/pattern"
 import { validateRack } from "@/audio/rack"
@@ -81,7 +82,7 @@ function DetailsTab() {
           type="button"
           className="btn btn-primary btn-sm"
           disabled={busy || errors.length > 0}
-          onClick={() => run(async () => download(`${fileBase}.driftfx`, await exportDriftfx(doc, { png: null }), "application/octet-stream"))}
+          onClick={() => run(async () => download(`${fileBase}.driftfx`, await exportDriftfx(doc, { png: null, irs: await irFiles(doc) }), "application/octet-stream"))}
         >
           Download .driftfx
         </button>
@@ -89,7 +90,7 @@ function DetailsTab() {
           type="button"
           className="btn btn-secondary btn-sm"
           disabled={busy || errors.length > 0}
-          onClick={() => run(async () => download(`${fileBase}.zip`, exportZip(doc, { png: null }), "application/zip"))}
+          onClick={() => run(async () => download(`${fileBase}.zip`, exportZip(doc, { png: null, irs: await irFiles(doc) }), "application/zip"))}
         >
           Download .zip
         </button>

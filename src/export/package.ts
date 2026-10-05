@@ -1,6 +1,7 @@
 import { compile, type CompileResult } from "@/compiler/compile"
 import { imageParamFile, MIN_APP_VERSION, packageJson, packageJsonName } from "@/compiler/manifest"
-import type { ForgeDoc } from "@/doc/types"
+import { allItems, irPath, rackOf } from "@/audio/rack"
+import { isSplit, type ForgeDoc } from "@/doc/types"
 import { base64ToBytes } from "@/doc/util"
 import type { PackFile } from "./driftfx"
 
@@ -10,6 +11,8 @@ export const GENERATOR = "drift-forge/0.1.0"
 export interface PreviewImages {
   /** effect thumbnail.png (256×256) or transition preview_strip.png (1536×128) */
   png: Uint8Array | null
+  /** audio: the board's impulse responses by package path (audio/irs.ts irFiles) */
+  irs?: Map<string, Uint8Array>
 }
 
 export function packageRoot(doc: ForgeDoc): "effects" | "transitions" | "audio-effects" {
@@ -49,6 +52,15 @@ export function packageFiles(doc: ForgeDoc, preview: PreviewImages): { files: Pa
     if (file) files.push({ path: file, data: base64ToBytes(doc.assets.find((a) => a.id === p.default)!.data) })
   }
   if (preview.png) files.push({ path: previewFileName(doc), data: preview.png })
+  if (doc.kind === "audio") {
+    const paths = new Set<string>()
+    for (const item of allItems(rackOf(doc))) if (!isSplit(item) && item.ir) paths.add(irPath(doc, item.ir))
+    for (const path of paths) {
+      const data = preview.irs?.get(path)
+      if (!data) throw new ExportError(`The impulse response ${path} wasn't loaded; try exporting again.`)
+      files.push({ path, data })
+    }
+  }
   return { files, compiled }
 }
 

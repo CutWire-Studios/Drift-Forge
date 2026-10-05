@@ -3,8 +3,6 @@ import { isClassic, PEDAL_GROUPS, PEDALS, pedalColor, type PedalSpec } from "@/a
 import { useEditor } from "@/state/editor"
 import { PEDAL_MIME } from "./Board"
 
-// Convolution arrives with impulse-response picking (it needs one to make a sound).
-const HIDDEN = new Set(["convolution"])
 
 const BLURBS: Record<string, string> = {
   filter: "Low-, high- or band-pass with resonance",
@@ -14,6 +12,7 @@ const BLURBS: Record<string, string> = {
   delay: "Repeats that darken as they fade",
   pan: "Place the sound left or right; widen or narrow it",
   gain: "Make it louder or quieter",
+  convolution: "Put the sound in a real space: a room, a hall, a spring tank",
 }
 
 function Item({ spec }: { spec: PedalSpec }) {
@@ -66,7 +65,7 @@ export function AudioPalette() {
   const [open, setOpen] = useState<Record<string, boolean>>({ new: true, split: true })
   const q = query.trim().toLowerCase()
   const pedals = useMemo(
-    () => PEDALS.filter((p) => !HIDDEN.has(p.type) && (!q || p.label.toLowerCase().includes(q) || p.category.includes(q))),
+    () => PEDALS.filter((p) => !q || p.label.toLowerCase().includes(q) || p.category.includes(q)),
     [q],
   )
   const groups: { id: string; label: string; color: string; items: PedalSpec[] }[] = [

@@ -5,6 +5,7 @@ import { isParamRef, isSplit, type ForgeDoc, type Pedal, type RackItem, type Spl
 import { useEditor } from "@/state/editor"
 import { toast } from "../../toast"
 import { Toggle } from "../widgets"
+import { IrPicker } from "./IrPicker"
 import { Knob, type KnobMod } from "./Knob"
 import { ModulatorStrip } from "./Modulators"
 import { bipolar, MOD_MIME, modColor } from "./mods"
@@ -227,6 +228,7 @@ function PedalCard({ pedal, selected }: { pedal: Pedal; selected: boolean }) {
       ) : (
         <p className="meta small">Drift doesn't have this pedal.</p>
       )}
+      {pedal.type === "convolution" && <IrPicker pedal={pedal} />}
       <footer className="pedal-foot">
         <Footswitch pedal={pedal} color={color} />
         <Scope id={pedal.id} color={color} />

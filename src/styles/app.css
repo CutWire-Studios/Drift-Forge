@@ -2155,6 +2155,25 @@ select.input {
   cursor: grab;
 }
 
+.ir-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.node-details .ir-picker {
+  padding: 0;
+}
+
+.ir-picker select {
+  flex: 1;
+  min-width: 0;
+}
+
 .mod-source {
   margin: 0 var(--space-3) var(--space-2);
 }

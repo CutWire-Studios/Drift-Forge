@@ -5,6 +5,7 @@ import { useEditor } from "@/state/editor"
 import { toast } from "../../toast"
 import { ScrubNumber, Toggle } from "../widgets"
 import { useRackValue } from "./Board"
+import { IrPicker } from "./IrPicker"
 import { modColor, modLabel } from "./mods"
 
 /** One control as a settings row: its value, and the way to make it a slider in Drift. */
@@ -113,6 +114,16 @@ function PedalDetails({ pedal }: { pedal: Pedal }) {
         <h3>{spec.label}</h3>
         <p className="meta">Turn the knobs on the pedal or here. Make any of them a slider and people can set it per clip in Drift.</p>
       </div>
+      {pedal.type === "convolution" && (
+        <>
+          <h4 className="section-title">Space</h4>
+          <IrPicker pedal={pedal} />
+          <p className="meta small">
+            The sound of a real or imagined space. To capture your own, record a clap or a balloon pop in a room and upload it: everything
+            after the bang is the room.
+          </p>
+        </>
+      )}
       <h4 className="section-title">Settings</h4>
       {spec.knobs.map((k) => (
         <div key={k.id}>

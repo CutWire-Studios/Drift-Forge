@@ -7,6 +7,7 @@
 import { allItems, rackOf, rackSignature } from "@/audio/rack"
 import { modulatorSpec, pedalSpec } from "@/audio/pedals"
 import { audioPackageJson } from "@/compiler/manifest"
+import { irFiles } from "@/audio/irs"
 import { isParamRef, isSplit, type ForgeDoc, type KnobValue, type ParamDefault, type PreviewInput } from "@/doc/types"
 import type { FromWorklet, ToWorklet } from "./messages"
 import { defaultInput, renderPattern } from "./pattern"
@@ -197,13 +198,7 @@ class AudioPreview {
       this.ids = allItems(rack).map((i) => i.id)
       this.modIds = rack.modulators.map((m) => m.id)
       this.params = new Map(doc.params.map((p) => [p.identifier, this.paramValue(p.identifier) ?? 0]))
-      this.post({
-        type: "graph",
-        generation: this.generation,
-        manifest: JSON.stringify(audioPackageJson(doc)),
-        files: [],
-        params: Object.fromEntries(this.params),
-      })
+      void this.sendGraph(doc, this.generation)
       return
     }
     for (const [key, m] of live) {
@@ -212,6 +207,26 @@ class AudioPreview {
     }
     this.live = live
     this.syncParams()
+  }
+
+  /** Impulse responses are fetched first (once each), so a graph can arrive a moment late. */
+  private async sendGraph(doc: ForgeDoc, generation: number) {
+    let files: Map<string, Uint8Array>
+    try {
+      files = await irFiles(doc)
+    } catch (err) {
+      this.patch({ error: (err as Error).message })
+      return
+    }
+    // A newer shape went out while this one was loading: it wins.
+    if (generation !== this.generation) return
+    this.post({
+      type: "graph",
+      generation,
+      manifest: JSON.stringify(audioPackageJson(doc)),
+      files: [...files].map(([path, data]) => ({ path, data })),
+      params: Object.fromEntries(this.params),
+    })
   }
 
   /** The Sliders tab's try-out values (they aren't saved; Drift users set them per clip). */
