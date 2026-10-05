@@ -88,7 +88,7 @@ class DriftGraphProcessor extends AudioWorkletProcessor {
       case "source":
         this.source = m.channels
         this.live = m.channels === null
-        this.position = 0
+        this.position = m.keepPosition && m.channels ? this.position % m.channels[0].length : 0
         break
       case "transport":
         this.playing = m.playing

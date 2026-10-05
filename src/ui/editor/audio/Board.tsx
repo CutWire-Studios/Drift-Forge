@@ -266,13 +266,22 @@ export function RackRow({ items, lane }: { items: RackItem[]; lane: string | nul
   )
 }
 
-export function Board({ doc }: { doc: ForgeDoc }) {
+export function Board({ doc, inputOpen, onToggleInput }: { doc: ForgeDoc; inputOpen: boolean; onToggleInput: () => void }) {
   const rack = rackOf(doc)
   const select = useEditor((s) => s.select)
   return (
     <main className="board" aria-label="Pedalboard" onPointerDown={() => select([])}>
       <div className="board-chain">
-        <span className="jack">In</span>
+        <button
+          type="button"
+          className={`jack jack-in${inputOpen ? " open" : ""}`}
+          aria-expanded={inputOpen}
+          title="What plays into the board"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={onToggleInput}
+        >
+          In
+        </button>
         <Cable from="input" />
         <RackRow items={rack.chain} lane={null} />
         <span className="jack">Out</span>

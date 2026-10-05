@@ -162,6 +162,28 @@ export interface ModRoute {
   depth: KnobValue
 }
 
+/** One instrument in the audio preview's step sequencer. */
+export interface SequencerRow {
+  id: string
+  /** an id from audio/preview/instruments */
+  instrument: string
+  /** 16 sixteenth-note steps */
+  steps: boolean[]
+  volume: number
+  /** -1 (left) .. 1 (right) */
+  pan: number
+  muted: boolean
+}
+
+/** What an audio effect is auditioned on. Only for the editor; never exported to Drift. */
+export interface PreviewInput {
+  mode: "pattern" | "audio"
+  bpm: number
+  rows: SequencerRow[]
+  /** in "audio" mode: which included recording plays (a file of the user's own isn't saved) */
+  audio: string
+}
+
 export interface AudioRack {
   chain: RackItem[]
   modulators: Modulator[]
@@ -195,6 +217,8 @@ export interface ForgeDoc {
     customThumb?: string
     /** Sample clip the editor previews on when the document opens (runtime/media SAMPLES id) */
     clip?: string
+    /** audio effects: the step pattern or recording the preview plays */
+    input?: PreviewInput
   }
 }
 

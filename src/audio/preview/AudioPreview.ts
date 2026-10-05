@@ -7,13 +7,16 @@
 import { allItems, rackOf, rackSignature } from "@/audio/rack"
 import { modulatorSpec, pedalSpec } from "@/audio/pedals"
 import { audioPackageJson } from "@/compiler/manifest"
-import { isParamRef, isSplit, type ForgeDoc, type KnobValue, type ParamDefault } from "@/doc/types"
+import { isParamRef, isSplit, type ForgeDoc, type KnobValue, type ParamDefault, type PreviewInput } from "@/doc/types"
 import type { FromWorklet, ToWorklet } from "./messages"
+import { defaultInput, renderPattern } from "./pattern"
 import workletUrl from "./worklet.ts?worker&url"
 
-export type SourceId = "beat" | "music" | "file" | "mic"
-
-export const SAMPLE_SOURCES: { id: SourceId; label: string; url?: string }[] = [
+// Voices first: most audio effects end up on someone talking. Both are public-domain recordings
+// (public/samples/CREDITS.md).
+export const SAMPLE_SOURCES: { id: string; label: string; url: string }[] = [
+  { id: "kennedy", label: "Voice: Kennedy, “We choose to go to the Moon”", url: "/samples/audio/kennedy-moon.mp3" },
+  { id: "clinton", label: "Voice: Clinton, “Women's rights are human rights”", url: "/samples/audio/clinton-beijing.mp3" },
   { id: "beat", label: "Drum loop", url: "/samples/beat-120.mp3" },
   { id: "music", label: "Chords", url: "/samples/audio/chords.mp3" },
 ]
@@ -29,12 +32,15 @@ export interface Meters {
   position: number
 }
 
+/** What is actually playing: the pattern, an included recording, the user's file, or the mic. */
+export type Playing = { kind: "pattern" } | { kind: "sample"; id: string } | { kind: "file"; name: string } | { kind: "mic" }
+
 export interface PreviewState {
   ready: boolean
   playing: boolean
   abBypass: boolean
-  source: SourceId
-  sourceName: string
+  source: Playing
+  /** loop length in seconds, 0 for the microphone */
   duration: number
   error: string | null
 }
@@ -91,7 +97,10 @@ class AudioPreview {
   private decoded = new Map<string, AudioBuffer>()
   private meterListeners = new Set<(m: Meters) => void>()
   private stateListeners = new Set<() => void>()
-  state: PreviewState = { ready: false, playing: false, abBypass: false, source: "beat", sourceName: "Drum loop", duration: 0, error: null }
+  state: PreviewState = { ready: false, playing: false, abBypass: false, source: { kind: "pattern" }, duration: 0, error: null }
+  private input: PreviewInput = defaultInput()
+  /** A file or the microphone, picked this session; overrides the document's recording choice. */
+  private own: { kind: "file"; file: File } | { kind: "mic" } | null = null
 
   onMeters(fn: (m: Meters) => void): () => void {
     this.meterListeners.add(fn)
@@ -136,7 +145,7 @@ class AudioPreview {
       this.signature = ""
       this.patch({ ready: true })
       if (this.doc) this.setDoc(this.doc)
-      await this.setSource(this.state.source)
+      await this.applyInput()
     })().catch((err: Error) => {
       this.starting = null
       this.patch({ error: `The preview can't start: ${err.message}` })
@@ -167,6 +176,10 @@ class AudioPreview {
   /** Follows the document: a new graph when its shape changed, live edits when only values did. */
   setDoc(doc: ForgeDoc) {
     this.doc = doc
+    if (doc.preview.input && doc.preview.input !== this.input) {
+      this.input = doc.preview.input
+      void this.applyInput()
+    }
     if (!this.node) return
     const signature = rackSignature(doc)
     const live = liveValues(doc)
@@ -240,55 +253,93 @@ class AudioPreview {
     this.micStream = null
   }
 
-  private sendBuffer(buffer: AudioBuffer) {
-    const channels = Array.from({ length: Math.min(2, buffer.numberOfChannels) }, (_, c) => buffer.getChannelData(c).slice())
-    this.post({ type: "source", channels }, channels.map((c) => c.buffer))
-    this.patch({ duration: buffer.duration })
+  private sendChannels(channels: Float32Array[], keepPosition = false) {
+    // Measured first: posting transfers the buffers, which leaves them empty here.
+    const duration = channels[0].length / this.ctx!.sampleRate
+    this.post({ type: "source", channels, keepPosition }, channels.map((c) => c.buffer))
+    this.patch({ duration })
   }
 
-  /** A bundled sample, the microphone, or (with `file`) audio of the user's own. */
-  async setSource(id: SourceId, file?: File) {
+  /** What the input setting and this session's own file or mic choice say should play. */
+  private intended(): Playing {
+    if (this.input.mode === "pattern") return { kind: "pattern" }
+    if (this.own?.kind === "mic") return { kind: "mic" }
+    if (this.own?.kind === "file") return { kind: "file", name: this.own.file.name }
+    return { kind: "sample", id: (SAMPLE_SOURCES.find((x) => x.id === this.input.audio) ?? SAMPLE_SOURCES[0]).id }
+  }
+
+  private async decode(url: string): Promise<AudioBuffer> {
+    let buffer = this.decoded.get(url)
+    if (!buffer) {
+      buffer = await this.ctx!.decodeAudioData(await (await fetch(url)).arrayBuffer())
+      this.decoded.set(url, buffer)
+    }
+    return buffer
+  }
+
+  /** Plays what the document's input setting (and any file or mic picked this session) says. */
+  private async applyInput() {
+    // Before the first Play there is nothing to load into yet, but the choice still shows.
     if (!this.ctx) {
-      this.patch({ source: id, sourceName: file?.name ?? SAMPLE_SOURCES.find((s) => s.id === id)?.label ?? "" })
-      if (file) this.pendingFile = file
+      this.patch({ source: this.intended() })
       return
     }
-    const ctx = this.ctx
-    this.stopMic()
+    const input = this.input
     try {
-      if (id === "mic") {
+      if (input.mode === "pattern") {
+        this.stopMic()
+        const wasPattern = this.state.source.kind === "pattern"
+        this.sendChannels(renderPattern(input, this.ctx.sampleRate), wasPattern)
+        this.patch({ source: { kind: "pattern" }, error: null })
+        return
+      }
+      if (this.own?.kind === "mic") {
+        if (this.mic) return
         // Echo cancellation and noise suppression would fight the effects being auditioned.
         this.micStream = await navigator.mediaDevices.getUserMedia({
           audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
         })
-        this.mic = ctx.createMediaStreamSource(this.micStream)
+        this.mic = this.ctx.createMediaStreamSource(this.micStream)
         this.mic.connect(this.node!)
         this.post({ type: "source", channels: null })
-        this.patch({ source: id, sourceName: "Microphone", duration: 0, error: null })
+        this.patch({ source: { kind: "mic" }, duration: 0, error: null })
         return
       }
-      const pick = file ?? (id === "file" ? this.pendingFile : undefined)
-      let buffer: AudioBuffer | undefined
-      if (pick) {
-        buffer = await ctx.decodeAudioData(await pick.arrayBuffer())
-        this.pendingFile = pick
-      } else {
-        const url = SAMPLE_SOURCES.find((s) => s.id === id)?.url
-        if (!url) return
-        buffer = this.decoded.get(url)
-        if (!buffer) {
-          buffer = await ctx.decodeAudioData(await (await fetch(url)).arrayBuffer())
-          this.decoded.set(url, buffer)
-        }
+      this.stopMic()
+      if (this.own?.kind === "file") {
+        const buffer = await this.ctx.decodeAudioData(await this.own.file.arrayBuffer())
+        this.sendBuffer(buffer)
+        this.patch({ source: { kind: "file", name: this.own.file.name }, error: null })
+        return
       }
-      this.sendBuffer(buffer)
-      this.patch({ source: id, sourceName: pick?.name ?? SAMPLE_SOURCES.find((s) => s.id === id)!.label, error: null })
+      const sample = SAMPLE_SOURCES.find((x) => x.id === input.audio) ?? SAMPLE_SOURCES[0]
+      this.sendBuffer(await this.decode(sample.url))
+      this.patch({ source: { kind: "sample", id: sample.id }, error: null })
     } catch (err) {
-      this.patch({ error: id === "mic" ? "The microphone isn't available." : `Couldn't play that audio: ${(err as Error).message}` })
+      this.patch({ error: this.own?.kind === "mic" ? "The microphone isn't available." : `Couldn't play that audio: ${(err as Error).message}` })
     }
   }
 
-  private pendingFile: File | undefined
+  private sendBuffer(buffer: AudioBuffer) {
+    this.sendChannels(Array.from({ length: Math.min(2, buffer.numberOfChannels) }, (_, c) => buffer.getChannelData(c).slice()))
+  }
+
+  /** Audio of the user's own, for this session; the document then plays it in "audio" mode. */
+  useFile(file: File) {
+    this.own = { kind: "file", file }
+    void this.applyInput()
+  }
+
+  useMic() {
+    this.own = { kind: "mic" }
+    void this.applyInput()
+  }
+
+  /** Back to the document's own choice (an included recording or the pattern). */
+  clearOwn() {
+    this.own = null
+    void this.applyInput()
+  }
 }
 
 export const audioPreview = new AudioPreview()

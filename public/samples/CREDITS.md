@@ -28,3 +28,10 @@ The people clips are 5-second cuts from Mixkit stock videos under the [Mixkit St
 ## Audio
 
 `audio/chords.mp3` is synthesized with ffmpeg's `aevalsrc` (an Am–F–C–G arpeggio over a bass line, with a light echo) and carries no third-party material.
+
+The two voice clips are public domain, cut from recordings on Wikimedia Commons and loudness-normalised:
+
+| File | Excerpt | Source | License |
+| --- | --- | --- | --- |
+| `audio/kennedy-moon.mp3` | John F. Kennedy at Rice University, 12 September 1962: “We choose to go to the Moon…” (9:13–9:40) | [President Kennedy's Speech at Rice University.ogv](https://commons.wikimedia.org/wiki/File:President_Kennedy%27s_Speech_at_Rice_University.ogv), NASA | Public domain |
+| `audio/clinton-beijing.mp3` | Hillary Rodham Clinton at the Fourth World Conference on Women, Beijing, 5 September 1995: “…human rights are women's rights and women's rights are human rights, once and for all” (14:46–15:00) | [First Lady Hillary Rodham Clintons Remarks to the Fourth Womens Conference in Beijing China.ogg](https://commons.wikimedia.org/wiki/File:First_Lady_Hillary_Rodham_Clintons_Remarks_to_the_Fourth_Womens_Conference_in_Beijing_China.ogg), White House Television, via the Clinton Presidential Library | Public domain |

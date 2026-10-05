@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { audioPreview } from "@/audio/preview/AudioPreview"
+import { defaultInput } from "@/audio/preview/pattern"
 import { validateRack } from "@/audio/rack"
 import { compile } from "@/compiler/compile"
 import { minAppVersion } from "@/compiler/manifest"
@@ -10,6 +11,7 @@ import { useEditor } from "@/state/editor"
 import { toast } from "../toast"
 import { AudioPalette } from "./audio/AudioPalette"
 import { Board } from "./audio/Board"
+import { InputDrawer } from "./audio/InputDrawer"
 import { PedalTab } from "./audio/PedalTab"
 import { Transport } from "./audio/Transport"
 import { SlidersTab } from "./Inspector"
@@ -102,6 +104,7 @@ function DetailsTab() {
  */
 export function AudioEditor() {
   const [tab, setTab] = useState<Tab>("pedal")
+  const [inputOpen, setInputOpen] = useState(true)
   const selected = useEditor((s) => s.selected)
   const params = useEditor((s) => s.doc!.params.length)
 
@@ -111,6 +114,13 @@ export function AudioEditor() {
 
   // The preview follows the document and the Sliders tab's try-out values.
   useEffect(() => {
+    // Documents from before the sequencer get its default pattern, without an undo step.
+    if (!useEditor.getState().doc?.preview.input) {
+      const { pause, resume } = useEditor.temporal.getState()
+      pause()
+      useEditor.getState().update((d) => void (d.preview.input = defaultInput()))
+      resume()
+    }
     const s = useEditor.getState()
     if (s.doc) audioPreview.setDoc(s.doc)
     audioPreview.setParamValues(s.paramValues)
@@ -140,9 +150,12 @@ export function AudioEditor() {
   return (
     <>
       <AudioPalette />
-      <Board doc={doc} />
+      <div className="board-area">
+        <Board doc={doc} inputOpen={inputOpen} onToggleInput={() => setInputOpen((o) => !o)} />
+        {inputOpen && <InputDrawer onClose={() => setInputOpen(false)} />}
+      </div>
       <div className="side">
-        <Transport />
+        <Transport inputOpen={inputOpen} onToggleInput={() => setInputOpen((o) => !o)} />
         <section className="inspector">
           <div className="tabs" role="tablist">
             {(

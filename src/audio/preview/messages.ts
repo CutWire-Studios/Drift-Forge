@@ -7,8 +7,11 @@ export type ToWorklet =
   | { type: "bypassNode"; node: string; on: boolean }
   | { type: "modKnob"; mod: string; knob: number; value: number }
   | { type: "step"; mod: string; step: number; value: number }
-  /** decoded audio to loop, or null to process the node's input (the microphone) */
-  | { type: "source"; channels: Float32Array[] | null }
+  /**
+   * Decoded audio to loop, or null to process the node's input (the microphone). With keepPosition
+   * the loop carries on from where it was: a re-rendered pattern must not restart the bar.
+   */
+  | { type: "source"; channels: Float32Array[] | null; keepPosition?: boolean }
   | { type: "transport"; playing: boolean; restart?: boolean }
   /** A/B: hear the input untouched while the graph keeps running */
   | { type: "abBypass"; on: boolean }

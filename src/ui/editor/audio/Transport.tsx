@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react"
-import { audioPreview, SAMPLE_SOURCES, type SourceId } from "@/audio/preview/AudioPreview"
+import { useEffect, useRef, useSyncExternalStore } from "react"
+import { audioPreview, SAMPLE_SOURCES, type Playing } from "@/audio/preview/AudioPreview"
 import { useMeters } from "./useMeters"
 
-function usePreviewState() {
+export function usePreviewState() {
   return useSyncExternalStore(
     (fn) => audioPreview.onState(fn),
     () => audioPreview.state,
@@ -37,35 +37,26 @@ function LevelMeters() {
   )
 }
 
-export function Transport() {
+function describe(source: Playing): string {
+  switch (source.kind) {
+    case "pattern":
+      return "Your pattern"
+    case "sample":
+      return SAMPLE_SOURCES.find((s) => s.id === source.id)?.label ?? "Recording"
+    case "file":
+      return source.name
+    case "mic":
+      return "Microphone"
+  }
+}
+
+export function Transport({ inputOpen, onToggleInput }: { inputOpen: boolean; onToggleInput: () => void }) {
   const state = usePreviewState()
-  const file = useRef<HTMLInputElement>(null)
-  const [dragging, setDragging] = useState(false)
 
   useEffect(() => () => audioPreview.pause(), [])
 
-  const pickSource = (id: SourceId) => {
-    if (id === "file") file.current?.click()
-    else void audioPreview.setSource(id)
-  }
-
   return (
-    <section
-      className={`transport${dragging ? " dragging" : ""}`}
-      aria-label="Listen"
-      onDragOver={(e) => {
-        if (!e.dataTransfer.types.includes("Files")) return
-        e.preventDefault()
-        setDragging(true)
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={(e) => {
-        e.preventDefault()
-        setDragging(false)
-        const f = e.dataTransfer.files[0]
-        if (f) void audioPreview.setSource("file", f)
-      }}
-    >
+    <section className="transport" aria-label="Listen">
       <div className="row gap-2">
         <button
           type="button"
@@ -84,15 +75,10 @@ export function Transport() {
           )}
           {state.playing ? "Pause" : "Play"}
         </button>
-        <select className="input input-sm source-select" aria-label="What to play" value={state.source} onChange={(e) => pickSource(e.target.value as SourceId)}>
-          {SAMPLE_SOURCES.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.label}
-            </option>
-          ))}
-          <option value="file">{state.source === "file" ? state.sourceName : "Your audio file…"}</option>
-          <option value="mic">Microphone</option>
-        </select>
+        <button type="button" className="btn btn-tertiary btn-sm source-btn" aria-expanded={inputOpen} onClick={onToggleInput} title="Choose what plays into the board">
+          <span className="source-name">{describe(state.source)}</span>
+          <span aria-hidden="true">{inputOpen ? "▾" : "▸"}</span>
+        </button>
         <button
           type="button"
           className={`btn btn-sm ab-btn${state.abBypass ? " btn-secondary" : " btn-tertiary"}`}
@@ -102,20 +88,9 @@ export function Transport() {
         >
           {state.abBypass ? "Hearing original" : "Compare"}
         </button>
-        <input
-          ref={file}
-          type="file"
-          accept="audio/*,video/*"
-          hidden
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) void audioPreview.setSource("file", f)
-            e.target.value = ""
-          }}
-        />
       </div>
       <LevelMeters />
-      {state.source === "mic" && state.playing && <p className="meta small">Use headphones: the speakers would feed back into the microphone.</p>}
+      {state.source.kind === "mic" && state.playing && <p className="meta small">Use headphones: the speakers would feed back into the microphone.</p>}
       {state.error && <p className="meta small danger-text">{state.error}</p>}
     </section>
   )

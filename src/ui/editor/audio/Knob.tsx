@@ -23,6 +23,7 @@ export function Knob({
   bound,
   onChange,
   size = 44,
+  compact = false,
 }: {
   spec: KnobSpec
   value: number
@@ -30,6 +31,8 @@ export function Knob({
   bound?: string
   onChange: (v: number) => void
   size?: number
+  /** just the dial, with the label and value in its tooltip */
+  compact?: boolean
 }) {
   const drag = useRef<{ y: number; t: number } | null>(null)
   const t = knobNorm(spec, value)
@@ -40,7 +43,10 @@ export function Knob({
   const nudge = (dt: number) => onChange(knobFromNorm(spec, t + dt))
 
   return (
-    <div className={`knob${bound ? " bound" : ""}`} title={bound ? `Slider in Drift: ${bound}` : undefined}>
+    <div
+      className={`knob${bound ? " bound" : ""}${compact ? " compact" : ""}`}
+      title={bound ? `Slider in Drift: ${bound}` : compact ? `${spec.label}: ${formatKnob(spec, value)}` : undefined}
+    >
       <div
         className="knob-dial"
         role="slider"
@@ -77,8 +83,8 @@ export function Knob({
         </svg>
         {bound && <span className="param-dot knob-bound" aria-hidden="true" />}
       </div>
-      <span className="knob-label">{spec.label}</span>
-      <span className="knob-value-text">{formatKnob(spec, value)}</span>
+      {!compact && <span className="knob-label">{spec.label}</span>}
+      {!compact && <span className="knob-value-text">{formatKnob(spec, value)}</span>}
     </div>
   )
 }
