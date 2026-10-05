@@ -84,7 +84,7 @@ export function Editor() {
   const [saved, setSaved] = useState(true)
   const quickAdd = useRef<(() => void) | null>(null)
   const [webgl] = useState(webgl2Available)
-  // Audio effects have no graph and no preview, so none of the WebGL machinery applies to them.
+  // Audio effects have their own board and preview, so none of the WebGL machinery applies to them.
   const isAudio = doc?.kind === "audio"
 
   useEffect(() => {
@@ -184,7 +184,7 @@ export function Editor() {
 
   if (doc.kind === "audio") {
     return (
-      <div className="editor audio-shell">
+      <div className="editor audio-board">
         <TopBar onExport={() => {}} onCode={() => {}} saved={saved} />
         <AudioEditor />
       </div>

@@ -1,3 +1,4 @@
+import { migrateLegacyAudio } from "@/audio/processors"
 import { FORGE_SCHEMA, type ForgeDoc } from "@/doc/types"
 import { zstdCompress, zstdDecompress } from "./zstd"
 
@@ -65,5 +66,10 @@ export function parseForgeDoc(text: string): ForgeDoc {
   }
   d.assets ??= []
   d.preview ??= { thumbTime: 0.5 }
+  if (d.kind === "audio") {
+    migrateLegacyAudio(d)
+    d.audio ??= { rack: { chain: [], modulators: [], routes: [] } }
+  }
+  d.forge = FORGE_SCHEMA
   return d
 }

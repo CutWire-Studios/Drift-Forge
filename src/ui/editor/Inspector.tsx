@@ -391,7 +391,7 @@ const TYPE_LABEL: Record<ParamDef["type"], string> = {
   curve: "Curve",
 }
 
-function SlidersTab() {
+export function SlidersTab() {
   const doc = useEditor((s) => s.doc!)
   const values = useEditor((s) => s.paramValues)
   const { setParamValue, resetParamValues } = useEditor.getState()

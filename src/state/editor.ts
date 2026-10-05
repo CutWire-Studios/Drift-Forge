@@ -1,8 +1,10 @@
 import { create } from "zustand"
 import { temporal } from "zundo"
 import { produce, type Draft } from "immer"
+import * as rack from "@/audio/rack"
+import type { Slot, ValuePath } from "@/audio/rack"
 import * as ops from "@/doc/ops"
-import type { ForgeAsset, ForgeDoc, InputValue, ParamDef, ParamDefault } from "@/doc/types"
+import type { ForgeAsset, ForgeDoc, InputValue, Modulator, ParamDef, ParamDefault, SplitBlock } from "@/doc/types"
 
 export { literalFromParam, optionExposable, uniqueParamName } from "@/doc/ops"
 
@@ -45,6 +47,37 @@ interface EditorState {
   savePreset(name: string): void
   applyPreset(name: string): void
   deletePreset(name: string): void
+
+  // Audio pedalboard. Ids returned are selected; errors come back as text, or null on success.
+  addPedal(type: string, slot?: Slot): string
+  addSplit(mode: SplitBlock["mode"], lanes?: number, slot?: Slot): string
+  moveRackItem(id: string, to: Slot): string | null
+  removeRackItem(id: string): void
+  addLane(splitId: string): string | null
+  removeLane(splitId: string, laneId: string): string | null
+  setLaneGain(splitId: string, laneId: string, gain: number): void
+  setSplitMode(splitId: string, mode: SplitBlock["mode"]): void
+  setCrossfade(splitId: string, on: boolean): string | null
+  setIr(pedalId: string, ir: string): void
+  setRackValue(path: ValuePath, v: number | boolean): void
+  exposeRackValue(path: ValuePath): string | null
+  unexposeRackValue(path: ValuePath): void
+  addModulator(type: Modulator["type"]): string
+  removeModulator(id: string): void
+  setModulatorSource(id: string, source: string): void
+  setSteps(id: string, steps: number[]): void
+  addRoute(from: string, to: string, knob: string, depth?: number): string | null
+  removeRoute(id: string): void
+}
+
+/** Every id selection can point at: graph nodes, rack items and modulators. */
+function selectableIds(d: ForgeDoc): Set<string> {
+  const ids = new Set(d.nodes.map((n) => n.id))
+  if (d.audio) {
+    for (const item of rack.allItems(d.audio.rack)) ids.add(item.id)
+    for (const m of d.audio.rack.modulators) ids.add(m.id)
+  }
+  return ids
 }
 
 /** Records one undo step per burst of changes (a drag, a slider scrub), not one per frame. */
@@ -81,7 +114,7 @@ export const useEditor = create<EditorState>()(
           if (d) set({ doc: produce(d, recipe) })
         },
         replaceDoc: (d) => {
-          const ids = new Set(d.nodes.map((n) => n.id))
+          const ids = selectableIds(d)
           set({ doc: d, selected: get().selected.filter((id) => ids.has(id)) })
         },
         select: (ids) => set({ selected: ids }),
@@ -151,6 +184,77 @@ export const useEditor = create<EditorState>()(
           if (pr) set({ paramValues: structuredClone(pr.values) })
         },
         deletePreset: (name) => put(ops.deletePreset(doc(), name)),
+
+        addPedal: (type, slot) => {
+          const r = rack.addPedal(doc(), type, slot)
+          if (ops.isOpError(r)) return ""
+          set({ doc: r.doc, selected: [r.id] })
+          return r.id
+        },
+        addSplit: (mode, lanes, slot) => {
+          const r = rack.addSplit(doc(), mode, lanes, slot)
+          if (ops.isOpError(r)) return ""
+          set({ doc: r.doc, selected: [r.id] })
+          return r.id
+        },
+        moveRackItem: (id, to) => {
+          const r = rack.moveItem(doc(), id, to)
+          if (ops.isOpError(r)) return r.error
+          put(r.doc)
+          return null
+        },
+        removeRackItem: (id) => {
+          const d = rack.removeItem(doc(), id)
+          const ids = selectableIds(d)
+          set({ doc: d, selected: get().selected.filter((s) => ids.has(s)) })
+        },
+        addLane: (splitId) => {
+          const r = rack.addLane(doc(), splitId)
+          if (ops.isOpError(r)) return r.error
+          put(r.doc)
+          return null
+        },
+        removeLane: (splitId, laneId) => {
+          const r = rack.removeLane(doc(), splitId, laneId)
+          if (ops.isOpError(r)) return r.error
+          put(r.doc)
+          return null
+        },
+        setLaneGain: (splitId, laneId, gain) => put(rack.setLaneGain(doc(), splitId, laneId, gain)),
+        setSplitMode: (splitId, mode) => put(rack.setSplitMode(doc(), splitId, mode)),
+        setCrossfade: (splitId, on) => {
+          const r = rack.setCrossfade(doc(), splitId, on)
+          if (ops.isOpError(r)) return r.error
+          put(r.doc)
+          return null
+        },
+        setIr: (pedalId, ir) => put(rack.setIr(doc(), pedalId, ir)),
+        setRackValue: (path, v) => put(rack.setValue(doc(), path, v)),
+        exposeRackValue: (path) => {
+          const r = rack.exposeValue(doc(), path)
+          if (ops.isOpError(r)) return r.error
+          put(r.doc)
+          return null
+        },
+        unexposeRackValue: (path) => put(rack.unexposeValue(doc(), path)),
+        addModulator: (type) => {
+          const r = rack.addModulator(doc(), type)
+          if (ops.isOpError(r)) return ""
+          set({ doc: r.doc, selected: [r.id] })
+          return r.id
+        },
+        removeModulator: (id) => {
+          set({ doc: rack.removeModulator(doc(), id), selected: get().selected.filter((s) => s !== id) })
+        },
+        setModulatorSource: (id, source) => put(rack.setModulatorSource(doc(), id, source)),
+        setSteps: (id, steps) => put(rack.setSteps(doc(), id, steps)),
+        addRoute: (from, to, knob, depth) => {
+          const r = rack.addRoute(doc(), from, to, knob, depth)
+          if (ops.isOpError(r)) return r.error
+          put(r.doc)
+          return null
+        },
+        removeRoute: (id) => put(rack.removeRoute(doc(), id)),
       }
     },
     {

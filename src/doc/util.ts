@@ -39,6 +39,7 @@ export function emptyDoc(kind: Kind, name = DEFAULT_NAME[kind]): ForgeDoc {
     nodes: [],
     edges: [],
     assets: [],
+    ...(kind === "audio" ? { audio: { rack: { chain: [], modulators: [], routes: [] } } } : {}),
     preview: { thumbTime: 0.5 },
   }
 }

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router"
 import type { ForgeDoc, Kind } from "@/doc/types"
-import { makeEffectId } from "@/doc/util"
-import { newAudioDoc } from "@/audio/processors"
+import { emptyDoc, makeEffectId } from "@/doc/util"
 import { importFile } from "@/export/archive"
 import { decodeLinkPayload } from "@/export/link"
 import { renderCardThumb } from "@/runtime/engine"
@@ -200,7 +199,7 @@ export function Home() {
               <strong>New transition</strong>
               <span className="meta">Moves from one clip to the next: wipes, dissolves, pushes…</span>
             </button>
-            <button type="button" className="new-card" onClick={() => start(newAudioDoc())}>
+            <button type="button" className="new-card" onClick={() => start(emptyDoc("audio"))}>
               <span className="new-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="28" height="28">
                   <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10v4" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" fill="none" />

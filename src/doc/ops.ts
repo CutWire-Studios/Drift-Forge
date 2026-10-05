@@ -1,15 +1,18 @@
 // Pure edits on a ForgeDoc. The editor store, the AI tool executor (browser and Worker) and the
 // MCP server all go through these, so a graph built by an AI behaves exactly like one built by hand.
 import { produce, type Draft } from "immer"
+import { forEachRackValue } from "@/audio/values"
 import { paramNameProblem } from "@/compiler/validate"
 import { createNode, nodeDef } from "@/nodes/registry"
 import type { InputDef, OptionDef } from "@/nodes/types"
 import {
   isParamRef,
+  type AudioRack,
   type ForgeAsset,
   type ForgeDoc,
   type ForgeNode,
   type InputValue,
+  type KnobValue,
   type Literal,
   type ParamDef,
   type ParamDefault,
@@ -75,7 +78,7 @@ function uiFor(input: InputDef): ParamUi | undefined {
   return Object.keys(ui).length ? ui : undefined
 }
 
-/** How many inputs and options read a parameter. */
+/** How many inputs, options and rack controls read a parameter. */
 export function paramUsers(doc: ForgeDoc, name: string): number {
   let n = 0
   for (const node of doc.nodes) {
@@ -83,6 +86,7 @@ export function paramUsers(doc: ForgeDoc, name: string): number {
       if (isParamRef(v) && (Array.isArray(v.param) ? v.param.includes(name) : v.param === name)) n++
     }
   }
+  if (doc.audio) forEachRackValue(doc.audio.rack, (v) => void (isParamRef(v) && v.param === name && n++))
   return n
 }
 
@@ -118,6 +122,11 @@ function releaseParam(d: Draft<ForgeDoc>, identifier: string) {
         n.data[k] = p.type === "clip" ? undefined : structuredClone(p.default)
       }
     }
+  }
+  if (d.audio) {
+    forEachRackValue(d.audio.rack as AudioRack, (v, set) => {
+      if (isParamRef(v) && v.param === identifier) set(typeof p.default === "boolean" ? p.default : Number(p.default))
+    })
   }
 }
 
@@ -363,6 +372,7 @@ export function updateParam(doc: ForgeDoc, identifier: string, patch: Partial<Pa
         for (const k of Object.keys(n.inputs)) n.inputs[k] = swap(n.inputs[k]) as Draft<InputValue>
         for (const k of Object.keys(n.data)) n.data[k] = swap(n.data[k])
       }
+      if (d.audio) forEachRackValue(d.audio.rack as AudioRack, (v, set) => set(swap(v) as KnobValue))
       for (const q of d.params) if (q.showWhen?.param === identifier) q.showWhen.param = to
       for (const pr of d.presets ?? []) {
         if (identifier in pr.values) {

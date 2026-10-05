@@ -3,7 +3,7 @@ import { unzipSync } from "fflate"
 import { exportDriftfx, exportZip, importFile } from "@/export/archive"
 import { DRIFTFX_MAGIC, readDriftfx, writeDriftfx } from "@/export/driftfx"
 import { decodeLinkPayload, encodeLinkPayload, linkDoc } from "@/export/link"
-import { newAudioDoc } from "@/audio/processors"
+import { legacyAudioDoc } from "@/audio/processors"
 import { compile } from "@/compiler/compile"
 import { minAppVersion, packageJson } from "@/compiler/manifest"
 import { STARTERS } from "@/starters"
@@ -89,7 +89,7 @@ describe("link", () => {
 })
 
 describe("audio effects", () => {
-  const echo = newAudioDoc("echo")
+  const echo = legacyAudioDoc("echo")
 
   it("exports a processor package with no pipeline", () => {
     const names = Object.keys(unzipSync(exportZip(echo, { png: null }))).sort()
@@ -110,9 +110,9 @@ describe("audio effects", () => {
     expect(minAppVersion(echo, compile(echo, { mode: "export" }))).toBe("0.7.1")
   })
 
-  it("survives a share link and refuses an unknown processor", async () => {
+  it("survives a share link and refuses an unknown pedal", async () => {
     expect(await decodeLinkPayload(await encodeLinkPayload(echo))).toEqual(linkDoc(echo))
-    const bad = { ...echo, audio: { processor: "nope" } }
+    const bad = { ...echo, audio: { rack: { chain: [{ id: "x", type: "classic.nope", knobs: {} }], modulators: [], routes: [] } } }
     expect(compile(bad, { mode: "export" }).ok).toBe(false)
   })
 })

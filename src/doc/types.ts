@@ -1,4 +1,4 @@
-export const FORGE_SCHEMA = 1
+export const FORGE_SCHEMA = 2
 
 export type Kind = "effect" | "transition" | "audio"
 
@@ -103,8 +103,69 @@ export interface ForgeAsset {
   mime: string
   /** base64, so the document stays plain JSON for IndexedDB, links and forge.json */
   data: string
+  /** images; 0 for audio */
   width: number
   height: number
+}
+
+/** A pedal or modulator control: a fixed value, or bound to one of the document's sliders. */
+export type KnobValue = number | boolean | { param: string }
+
+/** One of Drift's compiled-in pedals (src/audio/pedals.json); knobs are keyed by the catalog's ids. */
+export interface Pedal {
+  id: string
+  type: string
+  knobs: Record<string, KnobValue>
+  /** on (truthy) passes the audio through untouched */
+  bypass?: KnobValue
+  /** convolution: "builtin:<name>" or the id of an audio asset */
+  ir?: string
+}
+
+export interface SplitLane {
+  id: string
+  gain: number
+  chain: RackItem[]
+}
+
+/** Runs its lanes side by side and sums them: the same input in each, or one frequency band each. */
+export interface SplitBlock {
+  id: string
+  type: "split"
+  mode: "parallel" | "bands"
+  /** parallel, two lanes: equal-power blend between them instead of a sum */
+  crossfade?: boolean
+  blend?: KnobValue
+  /** bands: one frequency per boundary, ascending */
+  crossovers?: KnobValue[]
+  lanes: SplitLane[]
+}
+
+export type RackItem = Pedal | SplitBlock
+
+export interface Modulator {
+  id: string
+  type: "lfo" | "envelope" | "steps"
+  knobs: Record<string, KnobValue>
+  /** steps: one value per step, 0..1 */
+  steps?: number[]
+  /** envelope: "input", or the id of the pedal or split whose output it follows */
+  source?: string
+}
+
+/** A modulator moving a pedal knob; depth is a fraction of the knob's range, -1..1. */
+export interface ModRoute {
+  id: string
+  from: string
+  to: string
+  knob: string
+  depth: KnobValue
+}
+
+export interface AudioRack {
+  chain: RackItem[]
+  modulators: Modulator[]
+  routes: ModRoute[]
 }
 
 export interface ForgeMeta {
@@ -125,8 +186,8 @@ export interface ForgeDoc {
   edges: ForgeEdge[]
   assets: ForgeAsset[]
   presets?: Preset[]
-  /** audio effects: which of Drift's built-in processors this package configures (no node graph) */
-  audio?: { processor: string }
+  /** audio effects: the pedalboard Drift runs as an audio graph (no node graph) */
+  audio?: { rack: AudioRack }
   preview: {
     /** seconds into the clip the effect thumbnail is rendered at */
     thumbTime: number
@@ -135,6 +196,10 @@ export interface ForgeDoc {
     /** Sample clip the editor previews on when the document opens (runtime/media SAMPLES id) */
     clip?: string
   }
+}
+
+export function isSplit(item: RackItem): item is SplitBlock {
+  return item.type === "split"
 }
 
 export function isParamRef(v: unknown): v is ParamRef {

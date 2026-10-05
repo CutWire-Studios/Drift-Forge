@@ -24,3 +24,7 @@ The people clips are 5-second cuts from Mixkit stock videos under the [Mixkit St
 | `portrait.jpg` | [Portrait of a man (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Portrait_of_a_man_(Unsplash).jpg) | William Stitt willpower | CC0 |
 | `tulips.jpg` | [Colorful tulip bouquets (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Colorful_tulip_bouquets_(Unsplash).jpg) | John-Mark Kuznietsov mrrrk_smith | CC0 |
 | `vintage-car.jpg` | [Yellow vintage car Havana (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Yellow_vintage_car_Havana_(Unsplash).jpg) | Wolf Schram wolfbroadcast | CC0 |
+
+## Audio
+
+`audio/chords.mp3` is synthesized with ffmpeg's `aevalsrc` (an Am–F–C–G arpeggio over a bass line, with a light echo) and carries no third-party material.

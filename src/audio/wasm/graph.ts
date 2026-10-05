@@ -72,6 +72,9 @@ export class WasmGraph {
   setKnob(node: number, knob: number, value: number): void {
     this.M._dg_set_knob(this.ptr, node, knob, value)
   }
+  setBypass(node: number, on: boolean): void {
+    this.M._dg_set_bypass(this.ptr, node, on ? 1 : 0)
+  }
   modulatorIndex(id: string): number {
     return withString(this.M, id, (p) => this.M._dg_modulator_index(this.ptr, p))
   }
