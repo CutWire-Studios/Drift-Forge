@@ -70,20 +70,33 @@ effects/<id>/tex0.png …         images referenced by pipeline.textures
 effects/<id>/forge.json         the Drift Forge source document; Drift can ignore it
 ```
 
-An audio effect (`audio-effects/<id>/`) has no shader or picture: just `audio-effect.json` and
-`forge.json`. It is a built-in JUCE processor plus slider values, so it carries no code:
+An audio effect (`audio-effects/<id>/`) has no shader or picture: `audio-effect.json`,
+`forge.json`, and an `ir/<name>.wav` for each convolution pedal's impulse response. It carries no
+code. Forge writes one of two shapes:
 
-```json
-{
-  "id": "forge_my_echo_k3x9", "displayName": "My Echo", "category": "space", "icon": "repeat",
-  "order": 1000, "backend": "juce", "processor": "echo", "prerollMs": 800,
-  "parameters": [{ "identifier": "delay", "displayName": "Delay (ms)", "type": "float",
-                   "minValue": 10, "maxValue": 900, "defaultValue": 120 }]
-}
-```
+- **One classic pedal, every knob a slider of the same name** (what schema-1 documents open as):
+  written as the built-in processor it is, exactly as before. Needs Drift 0.7.1 or newer.
 
-`processor` must be one Drift implements (the table in `src/audio/processors.ts` mirrors
-`audio-effects/*/audio-effect.json` in the Drift repo). Drift needs 0.7.1 or newer to sideload one.
+  ```json
+  {
+    "id": "forge_my_echo_k3x9", "displayName": "My Echo", "category": "space", "icon": "repeat",
+    "order": 1000, "backend": "juce", "processor": "echo", "prerollMs": 800,
+    "parameters": [{ "identifier": "delay", "displayName": "Delay (ms)", "type": "float",
+                     "minValue": 10, "maxValue": 900, "defaultValue": 120 }]
+  }
+  ```
+
+- **Anything else**: `"processor": "graph"` with a `graph` object (pedals in a chain, splits,
+  modulators and routes, knobs bound to parameters as `{ "param": … }`), `"prerollMs": 0` (Drift
+  measures tails itself) and `"nextFeatures"` listing `audio:graph`, plus `audio:modulation` and
+  `audio:convolution` when used. Needs Drift 0.8.0 or newer, which the container's `minAppVersion`
+  says. The schema is documented in Drift's `docs/custom-effects.md`; Forge builds it in
+  `src/audio/rack.ts` (`graphJson`).
+
+The pedal catalog (`src/audio/pedals.json`) is generated from the Drift build by
+`scripts/build-audio-wasm.sh`, so Forge only offers pedals Drift implements, and the preview runs
+Drift's own DSP compiled to WebAssembly. `src/__tests__/audio-golden.test.ts` checks the two agree,
+and Drift's `tests/tst_addonpackage.cpp` installs a Forge export (`scripts/make-drift-fixtures.ts`).
 
 `effect.json` / `transition.json` follow `GpuPackageParse` exactly. Packages that use the newer
 controls or blocks add parameter types and a top-level `nextFeatures` list described in
