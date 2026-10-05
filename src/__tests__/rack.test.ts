@@ -160,6 +160,19 @@ describe("pedalboard documents", () => {
     expect(rack.rackSignature(ok(rack.addPedal(d.doc, "gain")).doc)).not.toBe(sig)
   })
 
+  it("keeps route depths and lane levels live, but rebuilds when routes come or go", () => {
+    const f = ok(rack.addPedal(emptyDoc("audio"), "filter"))
+    const s = ok(rack.addSplit(f.doc, "parallel"))
+    const m = ok(rack.addModulator(s.doc, "lfo"))
+    const routed = ok(rack.addRoute(m.doc, m.id, f.id, "cutoff", 0.3))
+    const sig = rack.rackSignature(routed.doc)
+    const split = rack.findItem(rack.rackOf(routed.doc), s.id)!.item as SplitBlock
+    expect(rack.rackSignature(rack.setValue(routed.doc, { kind: "depth", route: routed.id }, -0.8))).toBe(sig)
+    expect(rack.rackSignature(rack.setLaneGain(routed.doc, s.id, split.lanes[0].id, 0.2))).toBe(sig)
+    expect(rack.rackSignature(rack.removeRoute(routed.doc, routed.id))).not.toBe(sig)
+    expect(rack.rackSignature(ok(rack.exposeValue(routed.doc, { kind: "depth", route: routed.id })).doc)).not.toBe(sig)
+  })
+
   it("moves a pedal within and between lanes", () => {
     let doc = emptyDoc("audio")
     const a = ok(rack.addPedal(doc, "gain"))

@@ -53,6 +53,7 @@ function liveValues(doc: ForgeDoc): Map<string, ToWorklet> {
   const rack = rackOf(doc)
   for (const item of allItems(rack)) {
     if (isSplit(item)) {
+      item.lanes.forEach((l, i) => out.set(`${item.id}/lane${i}`, { type: "laneGain", node: item.id, lane: i, value: l.gain }))
       if (item.blend !== undefined && !isParamRef(item.blend)) out.set(`${item.id}/0`, { type: "knob", node: item.id, knob: 0, value: numeric(item.blend) })
       item.crossovers?.forEach((c, i) => {
         if (!isParamRef(c)) out.set(`${item.id}/${i + 1}`, { type: "knob", node: item.id, knob: i + 1, value: numeric(c) })
@@ -65,6 +66,11 @@ function liveValues(doc: ForgeDoc): Map<string, ToWorklet> {
       if (v !== undefined && !isParamRef(v)) out.set(`${item.id}/${i}`, { type: "knob", node: item.id, knob: i, value: numeric(v) })
     })
     if (!isParamRef(item.bypass)) out.set(`${item.id}/bypass`, { type: "bypassNode", node: item.id, on: !!item.bypass })
+  }
+  for (const r of rack.routes) {
+    const target = allItems(rack).find((i) => i.id === r.to)
+    const knob = target && !isSplit(target) ? (pedalSpec(target.type)?.knobs.findIndex((k) => k.id === r.knob) ?? -1) : -1
+    if (knob >= 0 && !isParamRef(r.depth)) out.set(`route/${r.id}`, { type: "routeDepth", node: r.to, knob, mod: r.from, value: numeric(r.depth) })
   }
   for (const m of rack.modulators) {
     modulatorSpec(m.type)?.knobs.forEach((k, i) => {

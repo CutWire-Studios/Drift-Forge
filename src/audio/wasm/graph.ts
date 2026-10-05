@@ -75,6 +75,12 @@ export class WasmGraph {
   setBypass(node: number, on: boolean): void {
     this.M._dg_set_bypass(this.ptr, node, on ? 1 : 0)
   }
+  setRouteDepth(node: number, knob: number, modulator: number, depth: number): void {
+    this.M._dg_set_route_depth(this.ptr, node, knob, modulator, depth)
+  }
+  setLaneGain(node: number, lane: number, gain: number): void {
+    this.M._dg_set_lane_gain(this.ptr, node, lane, gain)
+  }
   modulatorIndex(id: string): number {
     return withString(this.M, id, (p) => this.M._dg_modulator_index(this.ptr, p))
   }

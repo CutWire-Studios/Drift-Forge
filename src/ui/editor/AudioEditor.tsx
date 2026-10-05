@@ -160,7 +160,7 @@ export function AudioEditor() {
           <div className="tabs" role="tablist">
             {(
               [
-                ["pedal", "Pedal"],
+                ["pedal", "Selected"],
                 ["sliders", `Sliders${params ? ` (${params})` : ""}`],
                 ["details", "Details & export"],
               ] as const

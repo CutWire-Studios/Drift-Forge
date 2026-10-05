@@ -20,6 +20,8 @@ export interface DriftAudioModule {
   _dg_node_index(graph: number, nodeId: number): number
   _dg_set_knob(graph: number, node: number, knob: number, value: number): void
   _dg_set_bypass(graph: number, node: number, bypassed: number): void
+  _dg_set_route_depth(graph: number, node: number, knob: number, modulator: number, depth: number): void
+  _dg_set_lane_gain(graph: number, node: number, lane: number, gain: number): void
   _dg_modulator_index(graph: number, modulatorId: number): number
   _dg_modulator_count(graph: number): number
   _dg_set_modulator_knob(graph: number, modulator: number, knob: number, value: number): void

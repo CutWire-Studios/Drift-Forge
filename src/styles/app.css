@@ -2095,6 +2095,162 @@ select.input {
   color: var(--text-secondary);
 }
 
+/* Modulators: a strip of cards under the chain. Each has a colour its rings and handle share. */
+.mod-strip {
+  margin-top: var(--space-7);
+  width: max-content;
+  min-width: min(100%, 640px);
+}
+
+.mod-strip-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.mod-strip-head h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.mod-strip-head .meta {
+  margin-right: var(--space-2);
+}
+
+.mod-cards {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.mod-card {
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: 168px;
+  max-width: 300px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--cat);
+  border-radius: var(--radius-card);
+  background: var(--bg-secondary);
+}
+
+.mod-card.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mod-handle {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--cat);
+  color: var(--on-accent);
+  font-size: 15px;
+  line-height: 1;
+  cursor: grab;
+}
+
+.mod-source {
+  margin: 0 var(--space-3) var(--space-2);
+}
+
+.mod-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.mod-live {
+  position: relative;
+  width: 64px;
+  height: 6px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--bg-tertiary);
+}
+
+.mod-live > div {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.mod-live.two-way::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+.steps-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-2);
+}
+
+.steps-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 56px;
+  padding: 2px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.steps-bars span {
+  flex: 1;
+  min-width: 6px;
+  border-radius: 2px;
+}
+
+.knob-drop {
+  border-radius: 10px;
+}
+
+.knob-drop.over {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+  background: var(--accent-muted);
+}
+
+.knob-mod {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.knob-live {
+  transition: none;
+}
+
+.route-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0 var(--space-3);
+  padding-left: var(--space-2);
+  border-left: 3px solid var(--cat);
+}
+
+.route-row .nd-input {
+  flex: 1;
+}
+
 button.jack {
   padding: 0;
   cursor: pointer;

@@ -1,11 +1,13 @@
 import { useRef, useState } from "react"
-import { formatKnob, pedalColor, pedalSpec, type KnobSpec } from "@/audio/pedals"
+import { continuous, formatKnob, pedalColor, pedalSpec, type KnobSpec } from "@/audio/pedals"
 import { valueSpec, getValue, rackOf, type ValuePath } from "@/audio/rack"
 import { isParamRef, isSplit, type ForgeDoc, type Pedal, type RackItem, type SplitBlock } from "@/doc/types"
 import { useEditor } from "@/state/editor"
 import { toast } from "../../toast"
 import { Toggle } from "../widgets"
-import { Knob } from "./Knob"
+import { Knob, type KnobMod } from "./Knob"
+import { ModulatorStrip } from "./Modulators"
+import { bipolar, MOD_MIME, modColor } from "./mods"
 import { useMeters } from "./useMeters"
 
 export const PEDAL_MIME = "application/x-forge-pedal"
@@ -32,8 +34,26 @@ export function useRackValue(path: ValuePath): { spec?: KnobSpec; value: number;
   return { spec, value: numeric(raw ?? spec?.default ?? 0), set: (v) => useEditor.getState().setRackValue(path, spec?.scale === "toggle" ? v >= 0.5 : v) }
 }
 
+/** The routes moving a pedal knob, as its rings: depth resolved through any slider it's bound to. */
+function useKnobMods(path: ValuePath, spec?: KnobSpec): KnobMod[] {
+  const doc = useEditor((s) => s.doc!)
+  const paramValues = useEditor((s) => s.paramValues)
+  if (path.kind !== "knob" || !spec) return []
+  const rack = rackOf(doc)
+  return rack.routes
+    .filter((r) => r.to === path.item && r.knob === spec.id)
+    .map((r) => {
+      const p = isParamRef(r.depth) ? doc.params.find((q) => q.identifier === (r.depth as { param: string }).param) : undefined
+      const depth = isParamRef(r.depth) ? numeric(paramValues[r.depth.param] ?? p?.default ?? 0) : numeric(r.depth)
+      const type = rack.modulators.find((m) => m.id === r.from)?.type ?? "lfo"
+      return { mod: r.from, depth, color: modColor(rack, r.from), bipolar: bipolar(type) }
+    })
+}
+
 function RackKnob({ path, color }: { path: ValuePath; color: string }) {
   const { spec, value, bound, set } = useRackValue(path)
+  const mods = useKnobMods(path, spec)
+  const [over, setOver] = useState(false)
   if (!spec) return null
   if (spec.scale === "toggle") {
     return (
@@ -61,7 +81,30 @@ function RackKnob({ path, color }: { path: ValuePath; color: string }) {
       </label>
     )
   }
-  return <Knob spec={spec} value={value} color={color} bound={bound} onChange={set} />
+  const knob = <Knob spec={spec} value={value} color={color} bound={bound} onChange={set} mods={mods} />
+  if (path.kind !== "knob" || !continuous(spec)) return knob
+  // Drop a modulator's handle here to have it move this knob.
+  return (
+    <div
+      className={`knob-drop${over ? " over" : ""}`}
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes(MOD_MIME)) return
+        e.preventDefault()
+        setOver(true)
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        setOver(false)
+        const mod = e.dataTransfer.getData(MOD_MIME)
+        if (!mod) return
+        e.preventDefault()
+        const err = useEditor.getState().addRoute(mod, path.item, spec.id)
+        if (err) toast(err, "error")
+      }}
+    >
+      {knob}
+    </div>
+  )
 }
 
 /** The signal leaving a pedal: a few seconds of its loudest moments, plus a level bar. */
@@ -249,6 +292,8 @@ function BandEdge({ split, index }: { split: SplitBlock; index: number }) {
   return spec ? <span className="meta small"> up to {formatKnob(spec, value)}</span> : null
 }
 
+export { RackKnob }
+
 export function RackRow({ items, lane }: { items: RackItem[]; lane: string | null }) {
   const selected = useEditor((s) => s.selected[0])
   return (
@@ -286,6 +331,7 @@ export function Board({ doc, inputOpen, onToggleInput }: { doc: ForgeDoc; inputO
         <RackRow items={rack.chain} lane={null} />
         <span className="jack">Out</span>
       </div>
+      <ModulatorStrip rack={rack} />
       {!rack.chain.length && (
         <div className="board-empty">
           <h2>Build your sound left to right</h2>

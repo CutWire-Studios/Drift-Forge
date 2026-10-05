@@ -79,6 +79,12 @@ class DriftGraphProcessor extends AudioWorkletProcessor {
       case "bypassNode":
         if (this.graph) this.graph.setBypass(this.graph.nodeIndex(m.node), m.on)
         break
+      case "routeDepth":
+        if (this.graph) this.graph.setRouteDepth(this.graph.nodeIndex(m.node), m.knob, this.graph.modulatorIndex(m.mod), m.value)
+        break
+      case "laneGain":
+        if (this.graph) this.graph.setLaneGain(this.graph.nodeIndex(m.node), m.lane, m.value)
+        break
       case "modKnob":
         if (this.graph) this.graph.setModulatorKnob(this.graph.modulatorIndex(m.mod), m.knob, m.value)
         break

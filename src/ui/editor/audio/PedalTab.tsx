@@ -1,10 +1,11 @@
-import { pedalColor, pedalSpec } from "@/audio/pedals"
+import { knobSpec, modulatorSpec, pedalColor, pedalSpec } from "@/audio/pedals"
 import { findItem, rackOf, type ValuePath } from "@/audio/rack"
-import { isSplit, type Pedal, type SplitBlock } from "@/doc/types"
+import { isSplit, type AudioRack, type ModRoute, type Modulator, type Pedal, type SplitBlock } from "@/doc/types"
 import { useEditor } from "@/state/editor"
 import { toast } from "../../toast"
 import { ScrubNumber, Toggle } from "../widgets"
 import { useRackValue } from "./Board"
+import { modColor, modLabel } from "./mods"
 
 /** One control as a settings row: its value, and the way to make it a slider in Drift. */
 function ValueRow({ path, label }: { path: ValuePath; label?: string }) {
@@ -54,7 +55,55 @@ function ValueRow({ path, label }: { path: ValuePath; label?: string }) {
   )
 }
 
+/** One route as a row: who moves what, how far, and a way to drop it. */
+function RouteRow({ rack, route, from }: { rack: AudioRack; route: ModRoute; from: "pedal" | "modulator" }) {
+  const removeRoute = useEditor((s) => s.removeRoute)
+  const target = findItem(rack, route.to)
+  const tSpec = target && !isSplit(target.item) ? pedalSpec(target.item.type) : undefined
+  const knob = tSpec && knobSpec(tSpec, route.knob)
+  const label = from === "pedal" ? `Moved by ${modLabel(rack, route.from)}` : `${tSpec?.label ?? "Pedal"}: ${knob?.label ?? route.knob}`
+  return (
+    <div className="route-row" style={{ "--cat": modColor(rack, route.from) } as React.CSSProperties}>
+      <ValueRow path={{ kind: "depth", route: route.id }} label={`${label} (depth)`} />
+      <button type="button" className="mini-btn" aria-label={`Remove: ${label}`} onClick={() => removeRoute(route.id)}>
+        ×
+      </button>
+    </div>
+  )
+}
+
+const MOD_BLURB: Record<string, string> = {
+  lfo: "Sweeps the knobs it's on up and down, over and over. Depth sets how far either way.",
+  envelope: "Follows how loud the sound is: louder pushes the knobs it's on further. Use it for auto-wah or ducking.",
+  steps: "Steps through a pattern you draw, pushing the knobs it's on by each step's height.",
+}
+
+function ModulatorDetails({ rack, mod }: { rack: AudioRack; mod: Modulator }) {
+  const spec = modulatorSpec(mod.type)
+  const routes = rack.routes.filter((r) => r.from === mod.id)
+  return (
+    <div className="node-details">
+      <div className="nd-head" style={{ "--cat": modColor(rack, mod.id) } as React.CSSProperties}>
+        <span className="pill">Modulator</span>
+        <h3>{modLabel(rack, mod.id)}</h3>
+        <p className="meta">{MOD_BLURB[mod.type]}</p>
+      </div>
+      <h4 className="section-title">Settings</h4>
+      {spec?.knobs.map((k) => (
+        <ValueRow key={k.id} path={{ kind: "modKnob", mod: mod.id, knob: k.id }} />
+      ))}
+      <h4 className="section-title">Moves</h4>
+      {routes.length ? (
+        routes.map((r) => <RouteRow key={r.id} rack={rack} route={r} from="modulator" />)
+      ) : (
+        <p className="meta small">Nothing yet. Drag the ⊕ on its card onto any knob on the board.</p>
+      )}
+    </div>
+  )
+}
+
 function PedalDetails({ pedal }: { pedal: Pedal }) {
+  const rack = rackOf(useEditor((s) => s.doc!))
   const spec = pedalSpec(pedal.type)
   if (!spec) return <p className="meta">Drift has no pedal called “{pedal.type}”. Remove it to export.</p>
   return (
@@ -66,7 +115,14 @@ function PedalDetails({ pedal }: { pedal: Pedal }) {
       </div>
       <h4 className="section-title">Settings</h4>
       {spec.knobs.map((k) => (
-        <ValueRow key={k.id} path={{ kind: "knob", item: pedal.id, knob: k.id }} />
+        <div key={k.id}>
+          <ValueRow path={{ kind: "knob", item: pedal.id, knob: k.id }} />
+          {rack.routes
+            .filter((r) => r.to === pedal.id && r.knob === k.id)
+            .map((r) => (
+              <RouteRow key={r.id} rack={rack} route={r} from="pedal" />
+            ))}
+        </div>
       ))}
       <h4 className="section-title">Footswitch</h4>
       <ValueRow path={{ kind: "bypass", item: pedal.id }} label="Bypassed" />
@@ -122,11 +178,13 @@ export function PedalTab() {
   const doc = useEditor((s) => s.doc!)
   const selected = useEditor((s) => s.selected[0])
   const at = selected ? findItem(rackOf(doc), selected) : undefined
+  const mod = rackOf(doc).modulators.find((m) => m.id === selected)
+  if (mod) return <ModulatorDetails rack={rackOf(doc)} mod={mod} />
   if (!at) {
     return (
       <div className="inspector-tips">
-        <h4>Select a pedal</h4>
-        <p>Click a pedal on the board to see all its settings and choose which ones people can change in Drift.</p>
+        <h4>Select a pedal or modulator</h4>
+        <p>Click one on the board to see all its settings and choose which ones people can change in Drift.</p>
         <p>
           Settings marked <span className="param-dot inline" /> are sliders in Drift. Their values here are only for trying out; set their
           defaults in the Sliders tab.

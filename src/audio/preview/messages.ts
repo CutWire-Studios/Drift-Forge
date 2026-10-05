@@ -5,6 +5,9 @@ export type ToWorklet =
   | { type: "param"; id: string; value: number }
   | { type: "knob"; node: string; knob: number; value: number }
   | { type: "bypassNode"; node: string; on: boolean }
+  /** knob: index in the pedal's catalog knobs */
+  | { type: "routeDepth"; node: string; knob: number; mod: string; value: number }
+  | { type: "laneGain"; node: string; lane: number; value: number }
   | { type: "modKnob"; mod: string; knob: number; value: number }
   | { type: "step"; mod: string; step: number; value: number }
   /**

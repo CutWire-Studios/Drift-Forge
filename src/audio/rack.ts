@@ -563,14 +563,14 @@ export function rackSignature(doc: ForgeDoc): string {
   const strip = (v: KnobValue) => (isParamRef(v) ? v : 0)
   const shape = (item: RackItem): unknown =>
     isSplit(item)
-      ? [item.id, item.mode, !!item.crossfade, item.blend === undefined ? null : strip(item.blend), (item.crossovers ?? []).map(strip), item.lanes.map((l) => [l.gain, l.chain.map(shape)])]
+      ? [item.id, item.mode, !!item.crossfade, item.blend === undefined ? null : strip(item.blend), (item.crossovers ?? []).map(strip), item.lanes.map((l) => l.chain.map(shape))]
       : [item.id, item.type, item.ir ?? null, Object.entries(item.knobs).map(([k, v]) => [k, strip(v)]), strip(item.bypass ?? false)]
   const rack = rackOf(doc)
   return JSON.stringify([
     doc.params.map((p) => [p.identifier, p.type]),
     rack.chain.map(shape),
     rack.modulators.map((m) => [m.id, m.type, m.source ?? null, (m.steps ?? []).length, Object.entries(m.knobs).map(([k, v]) => [k, strip(v)])]),
-    rack.routes.map((r) => [r.from, r.to, r.knob, r.depth]),
+    rack.routes.map((r) => [r.from, r.to, r.knob, strip(r.depth)]),
   ])
 }
 
