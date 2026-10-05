@@ -1,0 +1,6 @@
+{
+  "driftCommit": "7d1d0397daa551bb92b7ccd96a1458da0f4eb307",
+  "emscripten": "6.0.11",
+  "juce": "8.0.15",
+  "soundtouch": "2.4.1"
+}

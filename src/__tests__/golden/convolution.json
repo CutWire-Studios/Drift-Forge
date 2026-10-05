@@ -1,0 +1,11 @@
+{
+  "id": "golden.convolution", "displayName": "Room", "category": "space", "backend": "juce", "processor": "graph",
+  "parameters": [],
+  "graph": {
+    "version": 1,
+    "chain": [
+      { "id": "c", "type": "convolution", "ir": "ir/room.wav",
+        "knobs": { "mix": 0.5, "lowcut": 120, "highcut": 9000, "predelay": 12 } }
+    ]
+  }
+}

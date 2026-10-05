@@ -1,0 +1,22 @@
+{
+  "id": "golden.tone", "displayName": "Tone", "category": "texture", "backend": "juce", "processor": "graph",
+  "parameters": [
+    { "identifier": "cutoff", "type": "float", "minValue": 100, "maxValue": 8000, "defaultValue": 1500 },
+    { "identifier": "wobble", "type": "float", "minValue": 0.1, "maxValue": 8, "defaultValue": 3 }
+  ],
+  "graph": {
+    "version": 1,
+    "modulators": [
+      { "id": "lfo", "type": "lfo", "knobs": { "shape": 1, "rate": { "param": "wobble" } } },
+      { "id": "env", "type": "envelope", "knobs": { "attack": 4, "release": 120, "gain": 3 } }
+    ],
+    "chain": [
+      { "id": "f", "type": "filter", "knobs": { "mode": 0, "cutoff": { "param": "cutoff" }, "resonance": 2 },
+        "mod": { "cutoff": [ { "from": "lfo", "depth": 0.3 } ] } },
+      { "id": "l", "type": "ladder", "knobs": { "mode": 4, "cutoff": 200, "resonance": 0.4, "drive": 2 } },
+      { "id": "d", "type": "drive", "knobs": { "shape": 3, "drive": 18, "output": -9 },
+        "mod": { "mix": [ { "from": "env", "depth": -0.6 } ] } },
+      { "id": "g", "type": "gain", "knobs": { "gain": -3 } }
+    ]
+  }
+}

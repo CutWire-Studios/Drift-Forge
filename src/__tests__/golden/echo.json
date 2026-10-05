@@ -1,0 +1,10 @@
+{
+  "id": "golden.echo", "displayName": "Echo", "category": "space", "backend": "juce",
+  "processor": "echo", "prerollMs": 800,
+  "parameters": [
+    { "identifier": "delay", "type": "float", "minValue": 10, "maxValue": 900, "defaultValue": 120 },
+    { "identifier": "decay", "type": "float", "minValue": 0.1, "maxValue": 0.9, "defaultValue": 0.6 },
+    { "identifier": "in_gain", "type": "float", "minValue": 0, "maxValue": 1, "defaultValue": 0.8 },
+    { "identifier": "out_gain", "type": "float", "minValue": 0, "maxValue": 1, "defaultValue": 0.9 }
+  ]
+}

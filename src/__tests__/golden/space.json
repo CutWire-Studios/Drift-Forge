@@ -1,0 +1,24 @@
+{
+  "id": "golden.space", "displayName": "Space", "category": "space", "backend": "juce", "processor": "graph",
+  "parameters": [
+    { "identifier": "space", "type": "float", "minValue": 0, "maxValue": 1, "defaultValue": 0.4 },
+    { "identifier": "dry", "type": "bool", "defaultValue": false }
+  ],
+  "graph": {
+    "version": 1,
+    "chain": [
+      { "id": "bands", "type": "split", "mode": "bands", "crossovers": [250, 2500],
+        "lanes": [
+          { "chain": [ { "id": "c", "type": "classic.compressor", "knobs": { "threshold": -24, "ratio": 4 } } ] },
+          { "chain": [ { "id": "ch", "type": "classic.chorus" } ] },
+          { "gain": 0.8, "chain": [] }
+        ] },
+      { "id": "mix", "type": "split", "crossfade": true, "blend": { "param": "space" },
+        "lanes": [
+          { "chain": [ { "id": "r", "type": "reverb", "knobs": { "size": 0.8, "mix": 0.5 }, "bypass": { "param": "dry" } } ] },
+          { "chain": [ { "id": "dl", "type": "delay", "knobs": { "time": 90, "feedback": 0.5, "pingpong": true, "tone": 4000 } } ] }
+        ] },
+      { "id": "p", "type": "pan", "knobs": { "pan": 0.3, "width": 1.4 } }
+    ]
+  }
+}

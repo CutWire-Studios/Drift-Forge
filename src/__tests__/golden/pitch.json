@@ -1,0 +1,5 @@
+{
+  "id": "golden.pitch", "displayName": "Pitch", "category": "voice", "backend": "juce",
+  "processor": "pitch", "prerollMs": 300,
+  "parameters": [ { "identifier": "pitch", "type": "float", "minValue": 0.5, "maxValue": 2, "defaultValue": 1.3 } ]
+}

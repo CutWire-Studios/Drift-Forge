@@ -1,0 +1,1442 @@
+{
+  "version": 1,
+  "pedals": [
+    {
+      "type": "filter",
+      "label": "Filter",
+      "category": "filter",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "mode",
+          "label": "Mode",
+          "min": 0,
+          "max": 2,
+          "default": 0,
+          "scale": "choice",
+          "unit": "",
+          "options": [
+            "Low-pass",
+            "High-pass",
+            "Band-pass"
+          ]
+        },
+        {
+          "id": "cutoff",
+          "label": "Cutoff",
+          "min": 20,
+          "max": 20000,
+          "default": 1200,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "resonance",
+          "label": "Resonance",
+          "min": 0.3,
+          "max": 10,
+          "default": 0.707,
+          "scale": "log",
+          "unit": "Q"
+        }
+      ]
+    },
+    {
+      "type": "ladder",
+      "label": "Ladder Filter",
+      "category": "filter",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "mode",
+          "label": "Mode",
+          "min": 0,
+          "max": 5,
+          "default": 3,
+          "scale": "choice",
+          "unit": "",
+          "options": [
+            "Low-pass 12",
+            "High-pass 12",
+            "Band-pass 12",
+            "Low-pass 24",
+            "High-pass 24",
+            "Band-pass 24"
+          ]
+        },
+        {
+          "id": "cutoff",
+          "label": "Cutoff",
+          "min": 20,
+          "max": 20000,
+          "default": 1200,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "resonance",
+          "label": "Resonance",
+          "min": 0,
+          "max": 1,
+          "default": 0.3,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "drive",
+          "label": "Drive",
+          "min": 1,
+          "max": 10,
+          "default": 1,
+          "scale": "linear",
+          "unit": "x"
+        }
+      ]
+    },
+    {
+      "type": "drive",
+      "label": "Drive",
+      "category": "texture",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "shape",
+          "label": "Shape",
+          "min": 0,
+          "max": 3,
+          "default": 0,
+          "scale": "choice",
+          "unit": "",
+          "options": [
+            "Soft",
+            "Hard",
+            "Fold",
+            "Asymmetric"
+          ]
+        },
+        {
+          "id": "drive",
+          "label": "Drive",
+          "min": 0,
+          "max": 40,
+          "default": 12,
+          "scale": "linear",
+          "unit": "dB"
+        },
+        {
+          "id": "mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 1,
+          "default": 1,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "output",
+          "label": "Output",
+          "min": -24,
+          "max": 12,
+          "default": -6,
+          "scale": "linear",
+          "unit": "dB"
+        }
+      ]
+    },
+    {
+      "type": "reverb",
+      "label": "Reverb",
+      "category": "space",
+      "prerollMs": 3000,
+      "knobs": [
+        {
+          "id": "size",
+          "label": "Size",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "damping",
+          "label": "Damping",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "width",
+          "label": "Width",
+          "min": 0,
+          "max": 1,
+          "default": 1,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 1,
+          "default": 0.3,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "freeze",
+          "label": "Freeze",
+          "min": 0,
+          "max": 1,
+          "default": 0,
+          "scale": "toggle",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "convolution",
+      "label": "Convolution Reverb",
+      "category": "space",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 1,
+          "default": 0.35,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "lowcut",
+          "label": "Low Cut",
+          "min": 20,
+          "max": 1000,
+          "default": 20,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "highcut",
+          "label": "High Cut",
+          "min": 1000,
+          "max": 20000,
+          "default": 20000,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "predelay",
+          "label": "Pre-delay",
+          "min": 0,
+          "max": 200,
+          "default": 0,
+          "scale": "linear",
+          "unit": "ms"
+        }
+      ]
+    },
+    {
+      "type": "delay",
+      "label": "Delay",
+      "category": "space",
+      "prerollMs": 3000,
+      "knobs": [
+        {
+          "id": "time",
+          "label": "Time",
+          "min": 10,
+          "max": 2000,
+          "default": 350,
+          "scale": "log",
+          "unit": "ms"
+        },
+        {
+          "id": "feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 0.95,
+          "default": 0.4,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "tone",
+          "label": "Tone",
+          "min": 500,
+          "max": 20000,
+          "default": 8000,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 1,
+          "default": 0.35,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "pingpong",
+          "label": "Ping-pong",
+          "min": 0,
+          "max": 1,
+          "default": 0,
+          "scale": "toggle",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "pan",
+      "label": "Pan",
+      "category": "utility",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "pan",
+          "label": "Pan",
+          "min": -1,
+          "max": 1,
+          "default": 0,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "width",
+          "label": "Width",
+          "min": 0,
+          "max": 2,
+          "default": 1,
+          "scale": "linear",
+          "unit": "x"
+        }
+      ]
+    },
+    {
+      "type": "gain",
+      "label": "Gain",
+      "category": "utility",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "gain",
+          "label": "Gain",
+          "min": -60,
+          "max": 24,
+          "default": 0,
+          "scale": "linear",
+          "unit": "dB"
+        }
+      ]
+    },
+    {
+      "type": "classic.eq3",
+      "label": "3-Band EQ",
+      "category": "utility",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "low",
+          "label": "Low",
+          "min": -12,
+          "max": 12,
+          "default": 0,
+          "scale": "linear",
+          "unit": "dB"
+        },
+        {
+          "id": "mid",
+          "label": "Mid",
+          "min": -12,
+          "max": 12,
+          "default": 0,
+          "scale": "linear",
+          "unit": "dB"
+        },
+        {
+          "id": "high",
+          "label": "High",
+          "min": -12,
+          "max": 12,
+          "default": 0,
+          "scale": "linear",
+          "unit": "dB"
+        }
+      ]
+    },
+    {
+      "type": "classic.compressor",
+      "label": "Compressor",
+      "category": "utility",
+      "prerollMs": 150,
+      "knobs": [
+        {
+          "id": "threshold",
+          "label": "Threshold",
+          "min": -40,
+          "max": -2,
+          "default": -18,
+          "scale": "linear",
+          "unit": "dB"
+        },
+        {
+          "id": "ratio",
+          "label": "Ratio",
+          "min": 1.5,
+          "max": 12,
+          "default": 3,
+          "scale": "linear",
+          "unit": ":1"
+        },
+        {
+          "id": "attack",
+          "label": "Attack",
+          "min": 1,
+          "max": 200,
+          "default": 20,
+          "scale": "log",
+          "unit": "ms"
+        },
+        {
+          "id": "release",
+          "label": "Release",
+          "min": 20,
+          "max": 1000,
+          "default": 250,
+          "scale": "log",
+          "unit": "ms"
+        },
+        {
+          "id": "makeup",
+          "label": "Makeup Gain",
+          "min": 1,
+          "max": 4,
+          "default": 2,
+          "scale": "linear",
+          "unit": "x"
+        }
+      ]
+    },
+    {
+      "type": "classic.limiter",
+      "label": "Limiter",
+      "category": "utility",
+      "prerollMs": 150,
+      "knobs": [
+        {
+          "id": "drive",
+          "label": "Drive",
+          "min": 1,
+          "max": 4,
+          "default": 1,
+          "scale": "linear",
+          "unit": "x"
+        },
+        {
+          "id": "ceiling",
+          "label": "Ceiling",
+          "min": 0.5,
+          "max": 1,
+          "default": 0.95,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.gate",
+      "label": "Noise Gate",
+      "category": "utility",
+      "prerollMs": 150,
+      "knobs": [
+        {
+          "id": "threshold",
+          "label": "Threshold",
+          "min": 0.001,
+          "max": 0.2,
+          "default": 0.02,
+          "scale": "log",
+          "unit": ""
+        },
+        {
+          "id": "ratio",
+          "label": "Strength",
+          "min": 1,
+          "max": 9,
+          "default": 3,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "attack",
+          "label": "Attack",
+          "min": 1,
+          "max": 100,
+          "default": 10,
+          "scale": "log",
+          "unit": "ms"
+        },
+        {
+          "id": "release",
+          "label": "Release",
+          "min": 20,
+          "max": 1000,
+          "default": 250,
+          "scale": "log",
+          "unit": "ms"
+        }
+      ]
+    },
+    {
+      "type": "classic.deesser",
+      "label": "De-esser",
+      "category": "utility",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "intensity",
+          "label": "Intensity",
+          "min": 0,
+          "max": 1,
+          "default": 0.35,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "amount",
+          "label": "Max Reduction",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "frequency",
+          "label": "Frequency",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.leveler",
+      "label": "Voice Leveler",
+      "category": "utility",
+      "prerollMs": 300,
+      "knobs": [
+        {
+          "id": "strength",
+          "label": "Strength",
+          "min": 1,
+          "max": 20,
+          "default": 6,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "peak",
+          "label": "Target Peak",
+          "min": 0.5,
+          "max": 1,
+          "default": 0.95,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.pitch",
+      "label": "Pitch Shift",
+      "category": "voice",
+      "prerollMs": 300,
+      "knobs": [
+        {
+          "id": "pitch",
+          "label": "Pitch",
+          "min": 0.5,
+          "max": 2,
+          "default": 1,
+          "scale": "log",
+          "unit": "x"
+        }
+      ]
+    },
+    {
+      "type": "classic.darklord",
+      "label": "Dark Lord",
+      "category": "voice",
+      "prerollMs": 600,
+      "knobs": [
+        {
+          "id": "pitch",
+          "label": "Pitch",
+          "min": 0.6,
+          "max": 0.95,
+          "default": 0.8,
+          "scale": "linear",
+          "unit": "x"
+        },
+        {
+          "id": "echo_delay",
+          "label": "Echo Delay",
+          "min": 10,
+          "max": 100,
+          "default": 40,
+          "scale": "linear",
+          "unit": "ms"
+        },
+        {
+          "id": "echo_decay",
+          "label": "Echo Decay",
+          "min": 0.1,
+          "max": 0.9,
+          "default": 0.4,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "grit",
+          "label": "Distortion",
+          "min": 0,
+          "max": 1,
+          "default": 0.3,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.vibrato",
+      "label": "Vibrato",
+      "category": "voice",
+      "prerollMs": 100,
+      "knobs": [
+        {
+          "id": "rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 20,
+          "default": 4,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "min": 0,
+          "max": 1,
+          "default": 0.6,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.tremolo",
+      "label": "Tremolo",
+      "category": "space",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 200,
+          "default": 5,
+          "scale": "log",
+          "unit": "Hz",
+          "aliases": [
+            "freq"
+          ]
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "min": 0,
+          "max": 1,
+          "default": 0.7,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.flanger",
+      "label": "Flanger",
+      "category": "space",
+      "prerollMs": 150,
+      "knobs": [
+        {
+          "id": "rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "default": 0.5,
+          "scale": "log",
+          "unit": "Hz",
+          "aliases": [
+            "speed"
+          ]
+        },
+        {
+          "id": "phase",
+          "label": "Stereo Phase",
+          "min": 0,
+          "max": 360,
+          "default": 90,
+          "scale": "linear",
+          "unit": "deg"
+        },
+        {
+          "id": "delay",
+          "label": "Delay",
+          "min": 0,
+          "max": 30,
+          "default": 5,
+          "scale": "linear",
+          "unit": "ms"
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "min": 0,
+          "max": 20,
+          "default": 2,
+          "scale": "linear",
+          "unit": "ms"
+        },
+        {
+          "id": "regen",
+          "label": "Feedback",
+          "min": -95,
+          "max": 95,
+          "default": 0,
+          "scale": "linear",
+          "unit": "%"
+        },
+        {
+          "id": "mix",
+          "label": "Wet Mix",
+          "min": 0,
+          "max": 100,
+          "default": 71,
+          "scale": "linear",
+          "unit": "%"
+        },
+        {
+          "id": "invert",
+          "label": "Invert Phase",
+          "min": 0,
+          "max": 1,
+          "default": 0,
+          "scale": "toggle",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.autopan",
+      "label": "Auto-Pan",
+      "category": "space",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "rate",
+          "label": "Rate",
+          "min": 0.01,
+          "max": 10,
+          "default": 0.5,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "amount",
+          "label": "Amount",
+          "min": 0,
+          "max": 1,
+          "default": 1,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "level_in",
+          "label": "Input Level",
+          "min": 0,
+          "max": 4,
+          "default": 1,
+          "scale": "linear",
+          "unit": "x"
+        },
+        {
+          "id": "level_out",
+          "label": "Output Level",
+          "min": 0,
+          "max": 4,
+          "default": 1,
+          "scale": "linear",
+          "unit": "x"
+        }
+      ]
+    },
+    {
+      "type": "classic.chorus",
+      "label": "Chorus",
+      "category": "space",
+      "prerollMs": 150,
+      "knobs": [
+        {
+          "id": "in_gain",
+          "label": "Input",
+          "min": 0,
+          "max": 1,
+          "default": 0.6,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "out_gain",
+          "label": "Output",
+          "min": 0,
+          "max": 1,
+          "default": 0.9,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "delay",
+          "label": "Delay",
+          "min": 1,
+          "max": 100,
+          "default": 55,
+          "scale": "linear",
+          "unit": "ms"
+        },
+        {
+          "id": "decay",
+          "label": "Decay",
+          "min": 0,
+          "max": 1,
+          "default": 0.4,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "speed",
+          "label": "Speed",
+          "min": 0.1,
+          "max": 5,
+          "default": 0.25,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "min": 0,
+          "max": 10,
+          "default": 2,
+          "scale": "linear",
+          "unit": "ms"
+        }
+      ]
+    },
+    {
+      "type": "classic.echo",
+      "label": "Echo",
+      "category": "space",
+      "prerollMs": 800,
+      "knobs": [
+        {
+          "id": "delay",
+          "label": "Delay",
+          "min": 5,
+          "max": 900,
+          "default": 60,
+          "scale": "log",
+          "unit": "ms"
+        },
+        {
+          "id": "decay",
+          "label": "Decay",
+          "min": 0.1,
+          "max": 0.9,
+          "default": 0.4,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "in_gain",
+          "label": "Input",
+          "min": 0,
+          "max": 1,
+          "default": 0.8,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "out_gain",
+          "label": "Wet Mix",
+          "min": 0,
+          "max": 1,
+          "default": 0.88,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.phaser",
+      "label": "Phaser",
+      "category": "space",
+      "prerollMs": 150,
+      "knobs": [
+        {
+          "id": "speed",
+          "label": "Speed",
+          "min": 0.1,
+          "max": 2,
+          "default": 0.5,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "in_gain",
+          "label": "Input",
+          "min": 0,
+          "max": 1,
+          "default": 0.6,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "out_gain",
+          "label": "Output",
+          "min": 0,
+          "max": 1,
+          "default": 0.7,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "delay",
+          "label": "Delay",
+          "min": 0,
+          "max": 5,
+          "default": 3,
+          "scale": "linear",
+          "unit": "ms"
+        },
+        {
+          "id": "decay",
+          "label": "Decay",
+          "min": 0,
+          "max": 1,
+          "default": 0.4,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.stereowiden",
+      "label": "Stereo Widen",
+      "category": "space",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "drymix",
+          "label": "Dry Mix",
+          "min": 0,
+          "max": 1,
+          "default": 0.8,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "delay",
+          "label": "Delay",
+          "min": 1,
+          "max": 100,
+          "default": 20,
+          "scale": "linear",
+          "unit": "ms"
+        },
+        {
+          "id": "feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 1,
+          "default": 0.3,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "crossfeed",
+          "label": "Crossfeed",
+          "min": 0,
+          "max": 1,
+          "default": 0.3,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.bandlimit",
+      "label": "Band Limit",
+      "category": "transmission",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "low_cut",
+          "label": "High-Pass",
+          "min": 100,
+          "max": 800,
+          "default": 300,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "high_cut",
+          "label": "Low-Pass",
+          "min": 2000,
+          "max": 6000,
+          "default": 3400,
+          "scale": "log",
+          "unit": "Hz"
+        }
+      ]
+    },
+    {
+      "type": "classic.walkie",
+      "label": "Walkie-Talkie",
+      "category": "transmission",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "grit",
+          "label": "Grit",
+          "min": 0,
+          "max": 1,
+          "default": 0.4,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "low_cut",
+          "label": "High-Pass",
+          "min": 200,
+          "max": 800,
+          "default": 400,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "high_cut",
+          "label": "Low-Pass",
+          "min": 1500,
+          "max": 5000,
+          "default": 3000,
+          "scale": "log",
+          "unit": "Hz"
+        }
+      ]
+    },
+    {
+      "type": "classic.megaphone",
+      "label": "Megaphone",
+      "category": "transmission",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "center",
+          "label": "Center Freq",
+          "min": 300,
+          "max": 4000,
+          "default": 1500,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "width",
+          "label": "Band Width",
+          "min": 200,
+          "max": 3000,
+          "default": 1200,
+          "scale": "linear",
+          "unit": "Hz"
+        },
+        {
+          "id": "grit",
+          "label": "Distortion",
+          "min": 0,
+          "max": 1,
+          "default": 0.5,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.underwater",
+      "label": "Underwater",
+      "category": "transmission",
+      "prerollMs": 150,
+      "knobs": [
+        {
+          "id": "cutoff",
+          "label": "Cutoff",
+          "min": 100,
+          "max": 2000,
+          "default": 500,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "wet",
+          "label": "Chorus",
+          "min": 0,
+          "max": 1,
+          "default": 0.6,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "motion",
+          "label": "Motion",
+          "min": 0.1,
+          "max": 2,
+          "default": 0.25,
+          "scale": "log",
+          "unit": "Hz"
+        }
+      ]
+    },
+    {
+      "type": "classic.muffled",
+      "label": "Muffled",
+      "category": "transmission",
+      "prerollMs": 50,
+      "knobs": [
+        {
+          "id": "cutoff",
+          "label": "Cutoff",
+          "min": 200,
+          "max": 4000,
+          "default": 800,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "gain",
+          "label": "Gain",
+          "min": 0.1,
+          "max": 2,
+          "default": 1,
+          "scale": "linear",
+          "unit": "x"
+        }
+      ]
+    },
+    {
+      "type": "classic.tape",
+      "label": "Tape Saturation",
+      "category": "texture",
+      "prerollMs": 200,
+      "knobs": [
+        {
+          "id": "ratio",
+          "label": "Ratio",
+          "min": 1,
+          "max": 20,
+          "default": 4,
+          "scale": "linear",
+          "unit": ":1"
+        },
+        {
+          "id": "threshold",
+          "label": "Threshold",
+          "min": 0.01,
+          "max": 1,
+          "default": 0.2,
+          "scale": "log",
+          "unit": ""
+        },
+        {
+          "id": "attack",
+          "label": "Attack",
+          "min": 1,
+          "max": 200,
+          "default": 5,
+          "scale": "log",
+          "unit": "ms"
+        },
+        {
+          "id": "release",
+          "label": "Release",
+          "min": 10,
+          "max": 1000,
+          "default": 50,
+          "scale": "log",
+          "unit": "ms"
+        }
+      ]
+    },
+    {
+      "type": "classic.bitcrush",
+      "label": "Bitcrush",
+      "category": "texture",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "bits",
+          "label": "Bits",
+          "min": 1,
+          "max": 16,
+          "default": 6,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "samples",
+          "label": "Sample Reduction",
+          "min": 1,
+          "max": 64,
+          "default": 16,
+          "scale": "linear",
+          "unit": "x"
+        },
+        {
+          "id": "mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 1,
+          "default": 0.7,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.bitcrush_log",
+      "label": "8-Bit",
+      "category": "texture",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "bits",
+          "label": "Bits",
+          "min": 1,
+          "max": 16,
+          "default": 4,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "samples",
+          "label": "Sample Reduction",
+          "min": 1,
+          "max": 64,
+          "default": 8,
+          "scale": "linear",
+          "unit": "x"
+        },
+        {
+          "id": "mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 1,
+          "default": 1,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "classic.vinyl",
+      "label": "Vinyl",
+      "category": "texture",
+      "prerollMs": 100,
+      "knobs": [
+        {
+          "id": "flutter",
+          "label": "Flutter",
+          "min": 0,
+          "max": 0.5,
+          "default": 0.15,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "highpass",
+          "label": "Rumble",
+          "min": 50,
+          "max": 500,
+          "default": 200,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "lowpass",
+          "label": "Cutoff",
+          "min": 2000,
+          "max": 12000,
+          "default": 6000,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "wobble",
+          "label": "Wobble Rate",
+          "min": 0.1,
+          "max": 5,
+          "default": 0.5,
+          "scale": "log",
+          "unit": "Hz"
+        }
+      ]
+    },
+    {
+      "type": "classic.crystalizer",
+      "label": "Crystalize",
+      "category": "texture",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "intensity",
+          "label": "Intensity",
+          "min": 0,
+          "max": 10,
+          "default": 2,
+          "scale": "linear",
+          "unit": ""
+        },
+        {
+          "id": "colors",
+          "label": "Colors",
+          "min": 2,
+          "max": 64,
+          "default": 8,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    }
+  ],
+  "modulators": [
+    {
+      "type": "lfo",
+      "label": "LFO",
+      "category": "modulator",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "shape",
+          "label": "Shape",
+          "min": 0,
+          "max": 4,
+          "default": 0,
+          "scale": "choice",
+          "unit": "",
+          "options": [
+            "Sine",
+            "Triangle",
+            "Square",
+            "Saw",
+            "Random"
+          ]
+        },
+        {
+          "id": "rate",
+          "label": "Rate",
+          "min": 0.01,
+          "max": 20,
+          "default": 1,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "phase",
+          "label": "Phase",
+          "min": 0,
+          "max": 1,
+          "default": 0,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "type": "envelope",
+      "label": "Envelope Follower",
+      "category": "modulator",
+      "prerollMs": 500,
+      "knobs": [
+        {
+          "id": "attack",
+          "label": "Attack",
+          "min": 1,
+          "max": 500,
+          "default": 10,
+          "scale": "log",
+          "unit": "ms"
+        },
+        {
+          "id": "release",
+          "label": "Release",
+          "min": 10,
+          "max": 2000,
+          "default": 200,
+          "scale": "log",
+          "unit": "ms"
+        },
+        {
+          "id": "gain",
+          "label": "Sensitivity",
+          "min": 0,
+          "max": 10,
+          "default": 2,
+          "scale": "linear",
+          "unit": "x"
+        }
+      ]
+    },
+    {
+      "type": "steps",
+      "label": "Step Sequencer",
+      "category": "modulator",
+      "prerollMs": 0,
+      "knobs": [
+        {
+          "id": "rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 20,
+          "default": 4,
+          "scale": "log",
+          "unit": "Hz"
+        },
+        {
+          "id": "glide",
+          "label": "Glide",
+          "min": 0,
+          "max": 1,
+          "default": 0,
+          "scale": "linear",
+          "unit": ""
+        }
+      ]
+    }
+  ]
+}
