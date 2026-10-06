@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 import { unzipSync } from "fflate"
-import { exportDriftfx, exportZip, importFile } from "@/export/archive"
-import { DRIFTFX_MAGIC, readDriftfx, writeDriftfx } from "@/export/driftfx"
-import { decodeLinkPayload, encodeLinkPayload, linkDoc } from "@/export/link"
-import { legacyAudioDoc } from "@/audio/processors"
-import { compile } from "@/compiler/compile"
-import { minAppVersion, packageJson } from "@/compiler/manifest"
-import { STARTERS } from "@/starters"
+import { exportDriftfx, exportZip, importFile } from "@/core/export/archive"
+import { DRIFTFX_MAGIC, readDriftfx, writeDriftfx } from "@/core/export/driftfx"
+import { decodeLinkPayload, encodeLinkPayload, linkDoc } from "@/core/export/link"
+import { legacyAudioDoc } from "@/core/audio/processors"
+import { compile } from "@/core/compiler/compile"
+import { minAppVersion, packageJson } from "@/core/compiler/manifest"
+import { STARTERS } from "@/core/starters"
 
 const glow = STARTERS.find((s) => s.name === "Dreamy glow")!.doc
 const wipe = STARTERS.find((s) => s.name === "Glowing wipe")!.doc

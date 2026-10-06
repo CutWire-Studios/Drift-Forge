@@ -74,7 +74,7 @@ Bound when a shader declares them; 0 when there's no audio.
 Drift already detects onsets for effect templates (`AppController.cpp:20040-20090`); the beat
 pulse can reuse them. Transitions may read these too: they are a function of timeline time, not
 of `u_time`, so they don't break the determinism rule for transitions. Forge's preview
-approximates them with WebAudio (`src/runtime/audio.ts`).
+approximates them with WebAudio (`src/services/preview/audio.ts`).
 
 ## Clip mask (`"requires": "mask"`)
 
@@ -92,4 +92,4 @@ declaring them:
 The package takes the masks over: the clip is drawn whole rather than cut out, and a cutout's
 decontaminated foreground is not used. A transition reads the outgoing clip's masks, laid out on
 the canvas. Forge's preview binds the Clip mask preview source (a sample clip's matte) in their
-place and splices the same prelude in (`MASK_PRELUDE` in `src/runtime/translate.ts`).
+place and splices the same prelude in (`MASK_PRELUDE` in `src/services/preview/translate.ts`).

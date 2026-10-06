@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs"
 import { beforeAll, describe, expect, it } from "vitest"
-import { legacyAudioDoc } from "@/audio/processors"
-import * as rack from "@/audio/rack"
-import { loadDriftAudio, WasmGraph, type DriftAudioModule } from "@/audio/wasm/graph"
-import { audioPackageJson, minAppVersion } from "@/compiler/manifest"
-import { compile } from "@/compiler/compile"
-import { isOpError, removeParam, updateParam, type OpResult } from "@/doc/ops"
-import { isSplit, type ForgeDoc, type SplitBlock } from "@/doc/types"
-import { emptyDoc } from "@/doc/util"
-import { parseForgeDoc } from "@/export/link"
+import { legacyAudioDoc } from "@/core/audio/processors"
+import * as rack from "@/core/audio/rack"
+import { loadDriftAudio, WasmGraph, type DriftAudioModule } from "@/services/audio-preview/wasm/graph"
+import { audioPackageJson, minAppVersion } from "@/core/compiler/manifest"
+import { compile } from "@/core/compiler/compile"
+import { isOpError, removeParam, updateParam, type OpResult } from "@/core/edit/ops"
+import { isSplit, type ForgeDoc, type SplitBlock } from "@/core/doc/types"
+import { emptyDoc } from "@/core/doc/util"
+import { parseForgeDoc } from "@/core/export/link"
 
 function ok<T extends object>(r: OpResult<T>): { doc: ForgeDoc } & T {
   if (isOpError(r)) throw new Error(r.error)

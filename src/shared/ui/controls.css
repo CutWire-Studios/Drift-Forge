@@ -1,0 +1,129 @@
+/* Controls ------------------------------------------------------------------ */
+
+.mini-btn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.mini-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.mini-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.seed-input {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 4px;
+}
+
+.seed-input .scrub {
+  flex: 1;
+}
+
+.choice-select {
+  min-height: 26px;
+  margin-left: auto;
+  padding: 0 28px 0 8px;
+  font-size: 12px;
+  width: auto;
+  max-width: 140px;
+}
+
+.gradient-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gradient-bar {
+  position: relative;
+  height: 26px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  cursor: copy;
+  touch-action: none;
+}
+
+.gradient-stop {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 30px;
+  border: 2px solid #fff;
+  border-radius: 5px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+}
+
+.gradient-stop.sel {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.region-pad {
+  cursor: crosshair;
+}
+
+.region-box {
+  position: absolute;
+  border: 2px solid var(--accent);
+  background: var(--accent-muted);
+  pointer-events: none;
+}
+
+.point-input.four {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.labels-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.labels-editor .input {
+  flex: 1;
+  width: auto;
+}
+
+.label-index {
+  width: 14px;
+  text-align: right;
+}
+
+.slider-card.hidden-when {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.presets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.preset-name {
+  flex: 1;
+  width: auto;
+}
+
+.source-picker .btn {
+  min-height: 30px;
+}

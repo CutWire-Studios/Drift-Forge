@@ -1,0 +1,46 @@
+/* Modal ------------------------------------------------------------------- */
+
+.modal {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-modal);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-elevated);
+}
+
+.modal-wide {
+  width: min(960px, calc(100vw - 32px));
+}
+
+.modal::backdrop {
+  background: var(--scrim);
+  backdrop-filter: blur(2px);
+}
+
+.modal[open] {
+  display: flex;
+  flex-direction: column;
+  animation: modal-in 200ms var(--ease);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-2) var(--space-6);
+}
+
+.modal-body {
+  padding: var(--space-2) var(--space-6) var(--space-6);
+  overflow: auto;
+}

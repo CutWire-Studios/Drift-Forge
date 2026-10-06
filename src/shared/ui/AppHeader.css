@@ -1,0 +1,77 @@
+/* Header ------------------------------------------------------------------ */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--header-height);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.brand .mark {
+  display: block;
+  height: 22px;
+  color: var(--text-primary);
+}
+
+.brand .mark svg {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+.divider {
+  width: 1px;
+  height: 22px;
+  flex: none;
+  background: var(--border);
+}
+
+.drift {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.drift img {
+  border-radius: 7px;
+}
+
+.drift b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .divider,
+  .drift span,
+  .hide-sm {
+    display: none;
+  }
+}

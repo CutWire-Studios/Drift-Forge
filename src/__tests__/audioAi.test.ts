@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs"
 import { beforeAll, describe, expect, it } from "vitest"
-import { runAgent, type ModelAdapter, type ModelReply, type ToolCall } from "@/ai/agent"
-import { systemPrompt } from "@/ai/prompt"
-import { agentTools, runTool, viewGraph } from "@/ai/tools"
-import * as rack from "@/audio/rack"
-import { loadDriftAudio, WasmGraph, type DriftAudioModule } from "@/audio/wasm/graph"
-import { audioPackageJson } from "@/compiler/manifest"
-import { isSplit, type ForgeDoc, type SplitBlock } from "@/doc/types"
-import { emptyDoc } from "@/doc/util"
-import { AUDIO_STARTERS } from "@/starters/audio"
+import { runAgent, type ModelAdapter, type ModelReply, type ToolCall } from "@/core/ai/agent"
+import { systemPrompt } from "@/core/ai/prompt"
+import { agentTools, runTool, viewGraph } from "@/core/ai/tools"
+import * as rack from "@/core/audio/rack"
+import { loadDriftAudio, WasmGraph, type DriftAudioModule } from "@/services/audio-preview/wasm/graph"
+import { audioPackageJson } from "@/core/compiler/manifest"
+import { isSplit, type ForgeDoc, type SplitBlock } from "@/core/doc/types"
+import { emptyDoc } from "@/core/doc/util"
+import { AUDIO_STARTERS } from "@/core/starters/audio"
 
 const call = (name: string, args: Record<string, unknown> = {}): ToolCall => ({ id: Math.random().toString(36).slice(2), name, args })
 

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { runAgent, type AgentEvent, type ModelAdapter, type ModelReply, type ToolCall } from "@/ai/agent"
-import { fromOpenAI, readChatResponse } from "@/ai/providers/openaiFormat"
-import { runTool, viewGraph } from "@/ai/tools"
-import { compile } from "@/compiler/compile"
-import { emptyDoc } from "@/doc/util"
-import { createNode, outputType } from "@/nodes/registry"
-import type { ForgeDoc, Kind } from "@/doc/types"
+import { runAgent, type AgentEvent, type ModelAdapter, type ModelReply, type ToolCall } from "@/core/ai/agent"
+import { fromOpenAI, readChatResponse } from "@/core/ai/providers/openaiFormat"
+import { runTool, viewGraph } from "@/core/ai/tools"
+import { compile } from "@/core/compiler/compile"
+import { emptyDoc } from "@/core/doc/util"
+import { createNode, outputType } from "@/core/nodes/registry"
+import type { ForgeDoc, Kind } from "@/core/doc/types"
 
 function blank(kind: Kind): ForgeDoc {
   const d = emptyDoc(kind)

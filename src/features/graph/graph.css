@@ -1,0 +1,434 @@
+/* Palette ----------------------------------------------------------------- */
+
+.palette {
+  grid-area: palette;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg-primary);
+}
+
+.palette-search {
+  margin: var(--space-3);
+  width: auto;
+  min-height: 36px;
+  font-size: 14px;
+}
+
+.palette-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--space-2) var(--space-6);
+}
+
+.palette-group ul {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.palette-cat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.palette-cat:hover {
+  color: var(--text-primary);
+}
+
+.palette-count {
+  margin-left: auto;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.cat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+}
+
+.palette-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 7px var(--space-2) 7px var(--space-3);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--cat);
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  cursor: grab;
+}
+
+.palette-item:hover {
+  border-color: var(--border);
+  border-left-color: var(--cat);
+  background: var(--bg-secondary);
+}
+
+.palette-item strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.palette-item span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-tertiary);
+}
+
+/* Graph ------------------------------------------------------------------- */
+
+.graph {
+  grid-area: graph;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-primary);
+}
+
+.graph .react-flow {
+  --xy-background-color: var(--bg-primary);
+  --xy-edge-stroke-width: 2.5;
+  --xy-selection-background-color: var(--accent-muted);
+  --xy-selection-border: 1px solid var(--accent);
+}
+
+/* base.css caps svg at max-width: 100%, and the edges container is 0x0, so Chrome drew no edges. */
+.graph .react-flow__edges svg {
+  max-width: none;
+}
+
+.graph .react-flow__edge.selected .react-flow__edge-path,
+.graph .react-flow__edge:hover .react-flow__edge-path {
+  stroke-width: 4;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+
+.graph .react-flow__connectionline path {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+
+.graph .react-flow__controls {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  box-shadow: var(--shadow-rest);
+}
+
+.graph .react-flow__controls-button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.graph .react-flow__controls-button svg {
+  fill: currentColor;
+  max-width: 12px;
+  max-height: 12px;
+}
+
+.graph .react-flow__controls-button:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.graph .react-flow__minimap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.graph .react-flow__attribution {
+  background: transparent;
+  color: var(--text-tertiary);
+}
+
+.graph .react-flow__attribution a {
+  color: inherit;
+}
+
+.graph-hint {
+  position: absolute;
+  top: var(--space-4);
+  left: 50%;
+  z-index: 5;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-rest);
+}
+
+/* Nodes */
+
+.fnode {
+  width: 224px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-hover);
+  font-size: 13px;
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease);
+}
+
+.fnode.selected {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 3px var(--accent-muted),
+    var(--shadow-hover);
+}
+
+.fnode.has-error {
+  border-color: var(--danger);
+}
+
+.fnode-output {
+  border-width: 2px;
+  border-color: var(--accent);
+}
+
+.fnode-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 11px 11px 0 0;
+  background: color-mix(in srgb, var(--cat) 14%, var(--bg-secondary));
+}
+
+.fnode-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--cat);
+}
+
+.fnode-title {
+  font-weight: 700;
+  letter-spacing: 0.005em;
+}
+
+.node-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  background: #000;
+}
+
+.fnode-err {
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.fnode-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 0 8px;
+}
+
+.fnode-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 26px;
+  padding: 0 12px;
+}
+
+.fnode-out {
+  justify-content: flex-end;
+}
+
+.fnode-label {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fnode-in > :last-child:not(.fnode-label) {
+  margin-left: auto;
+}
+
+.fnode-in .scrub {
+  flex: 1;
+}
+
+.react-flow__handle.sock {
+  width: 13px;
+  height: 13px;
+  min-width: 0;
+  min-height: 0;
+  border: 2.5px solid var(--bg-secondary);
+  border-radius: 50%;
+  background: var(--sock);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sock) 60%, var(--border-strong));
+  transition: transform 120ms var(--ease);
+}
+
+.react-flow__handle.sock:hover,
+.react-flow__handle.sock.connectingto {
+  transform: translate(var(--tx, 0), -50%) scale(1.35);
+}
+
+.react-flow__handle-left.sock {
+  left: -7px;
+  --tx: -50%;
+}
+
+.react-flow__handle-right.sock {
+  right: -7px;
+  --tx: 50%;
+}
+
+.input-note {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Quick add */
+
+.quick-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.quick-add {
+  position: fixed;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  max-height: 360px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-elevated);
+  overflow: hidden;
+  animation: modal-in 140ms var(--ease);
+}
+
+.quick-input {
+  margin: var(--space-2);
+  width: auto;
+  min-height: 38px;
+}
+
+.quick-list {
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-2);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.quick-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: 7px var(--space-2);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.quick-list li .cat-dot {
+  margin-top: 6px;
+}
+
+.quick-list li.active {
+  background: var(--accent-muted);
+}
+
+.quick-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.quick-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.quick-empty {
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+
+.wire-del {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-hover);
+  cursor: pointer;
+  pointer-events: all;
+  opacity: 0;
+  transition:
+    opacity var(--duration) var(--ease),
+    color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.wire-del.show,
+.wire-del:hover,
+.wire-del:focus-visible {
+  opacity: 1;
+}
+
+.wire-del:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}

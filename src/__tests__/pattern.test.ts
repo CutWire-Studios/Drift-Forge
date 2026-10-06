@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { INSTRUMENTS, instrumentSamples } from "@/audio/preview/instruments"
-import { defaultInput, newRow, renderPattern, STEPS, stepSeconds } from "@/audio/preview/pattern"
-import type { PreviewInput } from "@/doc/types"
+import { INSTRUMENTS, instrumentSamples } from "@/services/audio-preview/instruments"
+import { defaultInput, newRow, renderPattern, STEPS, stepSeconds } from "@/services/audio-preview/pattern"
+import type { PreviewInput } from "@/core/doc/types"
 
 const SR = 48000
 const peak = (x: Float32Array, from = 0, to = x.length) => {

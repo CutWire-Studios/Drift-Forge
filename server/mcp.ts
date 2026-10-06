@@ -1,22 +1,29 @@
 // Remote MCP server: outside AI tools (Claude, Cursor…) build Forge effects with their own model.
 // It never calls Workers AI, so it costs no AI credits. Documents live here for a week under an
 // unguessable doc_id and leave as a share link that opens in Forge.
+import { errorMessage } from "@/core/errors"
 import { createMcpHandler, fromJsonSchema, McpServer, type JsonSchemaType } from "@modelcontextprotocol/server"
-import { placeNew } from "@/ai/layout"
-import { AUDIO_TOOLS } from "@/ai/audioTools"
-import { runTool, TOOLS, viewGraph } from "@/ai/tools"
-import { compile } from "@/compiler/compile"
-import { packageJson, packageJsonName } from "@/compiler/manifest"
-import type { ForgeDoc } from "@/doc/types"
-import { makeEffectId } from "@/doc/util"
-import { decodeLinkPayload, encodeLinkPayload, LINK_LIMIT, parseForgeDoc } from "@/export/link"
-import { STARTERS } from "@/starters"
-import { AUDIO_STARTERS } from "@/starters/audio"
+import { placeNew } from "@/core/ai/layout"
+import { BUILD_TOOLS, isShared, runTool, viewGraph, type Tool } from "@/core/ai/tools"
+import { compile } from "@/core/compiler/compile"
+import { packageJson, packageJsonName } from "@/core/compiler/manifest"
+import type { ForgeDoc, Kind } from "@/core/doc/types"
+import { makeEffectId } from "@/core/doc/util"
+import { decodeLinkPayload, encodeLinkPayload, LINK_LIMIT, parseForgeDoc } from "@/core/export/link"
+import { STARTERS } from "@/core/starters"
+import { AUDIO_STARTERS } from "@/core/starters/audio"
 import { config } from "./config"
 import type { Ledger } from "./db"
 
 const DOC_TTL = 7 * 86_400_000
 const MAX_DOC = 512 * 1024
+
+const STARTER_LIST = [...STARTERS, ...AUDIO_STARTERS]
+
+// Both tool sets are offered; each says which kind of document it builds, and the other kind's
+// tools refuse with a pointer to the right ones.
+const KIND_PREFIX: Record<Kind, string> = { effect: "(Video effects and transitions.) ", transition: "(Video effects and transitions.) ", audio: "(Audio effects.) " }
+const forKind = (t: Tool) => (isShared(t) ? "" : KIND_PREFIX[t.kinds[0]])
 
 const schema = <T,>(s: object) => fromJsonSchema<T>(s as JsonSchemaType)
 
@@ -64,17 +71,16 @@ export function mcpHandler(ledger: Ledger) {
           properties: {
             kind: { type: "string", enum: ["effect", "transition", "audio"] },
             name: { type: "string" },
-            starter: { type: "string", description: `One of: ${[...STARTERS, ...AUDIO_STARTERS].map((s) => s.name).join(", ")}` },
+            starter: { type: "string", description: `One of: ${STARTER_LIST.map((s) => s.name).join(", ")}` },
           },
           required: ["kind"],
           additionalProperties: false,
         }),
       },
       async (args: { kind: "effect" | "transition" | "audio"; name?: string; starter?: string }) => {
-        const starters = [...STARTERS, ...AUDIO_STARTERS]
         const pick =
-          starters.find((s) => s.doc.kind === args.kind && s.name.toLowerCase() === (args.starter ?? "").toLowerCase()) ??
-          starters.find((s) => s.doc.kind === args.kind && s.name.startsWith("Blank"))!
+          STARTER_LIST.find((s) => s.doc.kind === args.kind && s.name.toLowerCase() === (args.starter ?? "").toLowerCase()) ??
+          STARTER_LIST.find((s) => s.doc.kind === args.kind && s.name.startsWith("Blank"))!
         const doc = structuredClone(pick.doc)
         if (args.name) doc.meta.displayName = args.name.slice(0, 60)
         doc.meta.id = makeEffectId(doc.meta.displayName)
@@ -92,24 +98,21 @@ export function mcpHandler(ledger: Ledger) {
         try {
           return store(await decodeLinkPayload(args.url.slice(args.url.indexOf("#") + 1)))
         } catch (e) {
-          return text((e as Error).message, true)
+          return text(errorMessage(e), true)
         }
       },
     )
 
-    // Both tool sets are offered; each says which kind of document it builds, and the other kind's
-    // tools refuse with a pointer to the right ones.
-    const shared = new Set(["set_details", "check"])
-    const forKind = (name: string, audio: boolean) => (shared.has(name) ? "" : audio ? "(Audio effects.) " : "(Video effects and transitions.) ")
-    for (const tool of [...TOOLS.map((t) => ({ t, audio: false })), ...AUDIO_TOOLS.map((t) => ({ t, audio: true }))].map(({ t, audio }) => ({ ...t, description: forKind(t.name, audio) + t.description }))) {
+    for (const tool of BUILD_TOOLS) {
+      const { name, description, parameters } = tool.spec
       server.registerTool(
-        tool.name,
-        { description: tool.description, inputSchema: schema<Record<string, unknown>>(withDocId(tool.parameters)) },
+        name,
+        { description: forKind(tool) + description, inputSchema: schema<Record<string, unknown>>(withDocId(parameters)) },
         async (args: Record<string, unknown>) => {
           const cur = load(args.doc_id)
           if (!cur) return text("Unknown or expired doc_id. Start with new_document or open_link.", true)
           const { doc_id: _id, ...rest } = args
-          const r = runTool(cur.doc, tool.name, rest)
+          const r = runTool(cur.doc, name, rest)
           if (r.doc !== cur.doc) {
             const err = save(String(args.doc_id), r.doc, [...cur.unplaced, ...(r.created ?? [])])
             if (err) return text(err, true)

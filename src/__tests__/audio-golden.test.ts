@@ -3,7 +3,7 @@
 // (scripts/update-audio-goldens.sh). A failure means the preview no longer sounds like Drift.
 import { readdirSync, readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
-import { loadDriftAudio, stageFile, WasmGraph } from "@/audio/wasm/graph"
+import { loadDriftAudio, stageFile, WasmGraph } from "@/services/audio-preview/wasm/graph"
 
 const golden = new URL("./golden/", import.meta.url)
 const read = (name: string) => readFileSync(new URL(name, golden))

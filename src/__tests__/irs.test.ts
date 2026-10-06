@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs"
 import { unzipSync } from "fflate"
 import { beforeAll, describe, expect, it } from "vitest"
-import { BUILTIN_IRS, irFiles } from "@/audio/irs"
-import * as rack from "@/audio/rack"
-import { loadDriftAudio, stageFile, WasmGraph, type DriftAudioModule } from "@/audio/wasm/graph"
-import { audioPackageJson } from "@/compiler/manifest"
-import { isOpError } from "@/doc/ops"
-import type { ForgeDoc } from "@/doc/types"
-import { bytesToBase64, emptyDoc } from "@/doc/util"
-import { exportZip } from "@/export/archive"
+import { BUILTIN_IRS, irFiles } from "@/core/audio/irs"
+import * as rack from "@/core/audio/rack"
+import { loadDriftAudio, stageFile, WasmGraph, type DriftAudioModule } from "@/services/audio-preview/wasm/graph"
+import { audioPackageJson } from "@/core/compiler/manifest"
+import { isOpError } from "@/core/edit/ops"
+import type { ForgeDoc } from "@/core/doc/types"
+import { bytesToBase64, emptyDoc } from "@/core/doc/util"
+import { exportZip } from "@/core/export/archive"
 
 const fromDisk = async (name: string) => new Uint8Array(readFileSync(new URL(`../../public/audio/ir/${name}.wav`, import.meta.url)))
 

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { unzipSync } from "fflate"
-import { compile } from "@/compiler/compile"
-import { packageJson } from "@/compiler/manifest"
-import type { ForgeDoc } from "@/doc/types"
-import { exportZip } from "@/export/archive"
+import { compile } from "@/core/compiler/compile"
+import { packageJson } from "@/core/compiler/manifest"
+import type { ForgeDoc } from "@/core/doc/types"
+import { exportZip } from "@/core/export/archive"
 import { useEditor } from "@/state/editor"
 import { chain } from "./helpers"
 

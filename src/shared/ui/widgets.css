@@ -1,0 +1,221 @@
+/* Widgets */
+
+.scrub {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 30px;
+  padding: 0 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  font-size: 13px;
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.scrub:hover {
+  border-color: var(--border-strong);
+}
+
+.scrub:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.scrub-compact {
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.scrub-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border-right: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  pointer-events: none;
+}
+
+.scrub-label,
+.scrub-value {
+  position: relative;
+  white-space: nowrap;
+}
+
+.scrub-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+}
+
+.scrub-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.scrub-edit {
+  width: 100%;
+  cursor: text;
+  font-variant-numeric: tabular-nums;
+}
+
+.swatch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  cursor: pointer;
+}
+
+.swatch-chip {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2);
+}
+
+.swatch-hex {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.swatch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  cursor: pointer;
+  transition: background-color var(--duration) var(--ease);
+}
+
+.toggle span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  transition: transform var(--duration) var(--ease);
+}
+
+.toggle.on {
+  background: var(--accent);
+}
+
+.toggle.on span {
+  transform: translateX(16px);
+}
+
+.point-input {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  min-width: 112px;
+}
+
+.vec2-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.point-pad {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px) 0 0 / 25% 25%,
+    linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0 / 12.5% 25%,
+    var(--bg-tertiary);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.point-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.param-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: rotate(45deg);
+}
+
+.param-dot.inline {
+  margin: 0 2px;
+  vertical-align: 1px;
+}
+
+.param-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 150px;
+  margin-left: auto;
+  padding: 2px 4px 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--accent-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.param-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.param-chip button {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.param-chip button:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}

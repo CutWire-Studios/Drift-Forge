@@ -1,0 +1,176 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "react",
+    "import",
+    "oxc"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": [
+    "dist",
+    "public",
+    "src/**/wasm/drift-audio.mjs",
+    "src/**/wasm/drift-audio.d.mts"
+  ],
+  "rules": {
+    "no-nested-ternary": "error",
+    "complexity": [
+      "error",
+      {
+        "max": 15
+      }
+    ],
+    "max-lines": [
+      "error",
+      {
+        "max": 400,
+        "skipBlankLines": true,
+        "skipComments": true
+      }
+    ],
+    "max-lines-per-function": [
+      "error",
+      {
+        "max": 150,
+        "skipBlankLines": true,
+        "skipComments": true
+      }
+    ],
+    "typescript/no-non-null-assertion": "warn",
+    "typescript/no-explicit-any": "error",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "import/no-cycle": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "regex": "^@/features/[a-z-]+/.+",
+            "message": "Import another feature through its index: @/features/<slice>."
+          }
+        ]
+      }
+    ],
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/core/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/(services|features|state|shared|app)(/|$)",
+                "message": "core is DOM-free and shared with the server: it may only import core."
+              },
+              {
+                "regex": "^react",
+                "message": "core is DOM-free and shared with the server."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/services/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/(features|state|shared/ui|app)(/|$)",
+                "message": "services sit below the UI."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/state/**",
+        "src/shared/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/(features|app)(/|$)",
+                "message": "state and shared UI sit below features."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "server/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@/(?!core/)",
+                "message": "the server may only import src/core."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/__tests__/**",
+        "server/*.test.ts",
+        "scripts/**"
+      ],
+      "rules": {
+        "max-lines-per-function": "off",
+        "typescript/no-non-null-assertion": "off"
+      }
+    },
+    {
+      "files": [
+        "src/core/nodes/**",
+        "src/core/starters/**",
+        "src/core/compiler/helpers.ts"
+      ],
+      "rules": {
+        "max-lines-per-function": "off",
+        "max-lines": "off"
+      }
+    },
+    {
+      "files": [
+        "src/services/audio-preview/AudioPreview.ts"
+      ],
+      "rules": {
+        "import/default": "off"
+      }
+    }
+  ]
+}

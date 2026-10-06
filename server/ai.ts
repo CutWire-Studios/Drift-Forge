@@ -5,11 +5,12 @@
 // prompt, the model, the tools and the limits. A client sends only its prompt, a short text history
 // and the current graph; it can't add instructions, tools or tool results. What streams back is the
 // model's (capped) reasoning, tool progress, at most a short reply, and the graph.
+import { errorMessage } from "@/core/errors"
 import { Hono } from "hono"
-import { runAgent, StopRun, type AgentEvent, type ChatTurn, type ModelAdapter } from "@/ai/agent"
-import { fromOpenAI, readChatResponse, toOpenAIMessages, toOpenAITools } from "@/ai/providers/openaiFormat"
-import type { ForgeDoc } from "@/doc/types"
-import { parseForgeDoc } from "@/export/link"
+import { runAgent, StopRun, type AgentEvent, type ChatTurn, type ModelAdapter } from "@/core/ai/agent"
+import { fromOpenAI, readChatResponse, toOpenAIMessages, toOpenAITools } from "@/core/ai/providers/openaiFormat"
+import type { ForgeDoc } from "@/core/doc/types"
+import { parseForgeDoc } from "@/core/export/link"
 import type { Auth } from "./auth"
 import { config } from "./config"
 import type { Ledger } from "./db"
@@ -106,7 +107,7 @@ export function aiRoutes(ledger: Ledger, auth: Auth) {
     try {
       doc = parseForgeDoc(JSON.stringify(body.doc))
     } catch (e) {
-      return c.json({ error: (e as Error).message }, 400)
+      return c.json({ error: errorMessage(e) }, 400)
     }
     if (doc.nodes.length > MAX_NODES) return c.json({ error: "This graph is too big for the built-in AI." }, 413)
 

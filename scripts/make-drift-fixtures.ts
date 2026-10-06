@@ -4,12 +4,12 @@
 //   npx vite-node scripts/make-drift-fixtures.ts <drift checkout>/tests/data
 import { readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { irFiles } from "@/audio/irs"
-import * as rack from "@/audio/rack"
-import { isOpError, updateParam, type OpResult } from "@/doc/ops"
-import type { ForgeDoc, SplitBlock } from "@/doc/types"
-import { emptyDoc } from "@/doc/util"
-import { exportDriftfx } from "@/export/archive"
+import { irFiles } from "@/core/audio/irs"
+import * as rack from "@/core/audio/rack"
+import { isOpError, updateParam, type OpResult } from "@/core/edit/ops"
+import type { ForgeDoc, SplitBlock } from "@/core/doc/types"
+import { emptyDoc } from "@/core/doc/util"
+import { exportDriftfx } from "@/core/export/archive"
 
 const out = process.argv[2]
 if (!out) throw new Error("usage: make-drift-fixtures.ts <drift tests/data dir>")

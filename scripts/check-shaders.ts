@@ -4,12 +4,12 @@ import { execFileSync } from "node:child_process"
 import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { compile } from "@/compiler/compile"
-import { esSource, withMaskPrelude } from "@/runtime/translate"
-import type { ForgeDoc, Kind, ParamDef } from "@/doc/types"
-import { emptyDoc } from "@/doc/util"
-import { availableFor, createNode, NODE_DEFS, outputType } from "@/nodes/registry"
-import { STARTERS } from "@/starters"
+import { compile } from "@/core/compiler/compile"
+import { esSource, withMaskPrelude } from "@/services/preview/translate"
+import type { ForgeDoc, Kind, ParamDef } from "@/core/doc/types"
+import { emptyDoc } from "@/core/doc/util"
+import { availableFor, createNode, NODE_DEFS, outputType } from "@/core/nodes/registry"
+import { STARTERS } from "@/core/starters"
 
 const dir = mkdtempSync(join(tmpdir(), "forge-glsl-"))
 let failures = 0
@@ -83,7 +83,7 @@ for (const kind of ["effect", "transition"] as Kind[]) {
     max: 1,
     default: def,
     ...extra,
-  })
+  }) as ParamDef
   doc.params.push(
     P("centre", "point", [0.5, 0.5]),
     P("slices", "int", 6, { max: 16 }),

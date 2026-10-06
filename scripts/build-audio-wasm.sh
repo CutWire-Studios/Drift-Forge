@@ -6,8 +6,8 @@
 #
 # Needs emsdk on PATH (source emsdk_env.sh). Writes, all committed:
 #   public/audio/drift-audio.wasm   the module
-#   src/audio/wasm/drift-audio.mjs  Emscripten's loader for it
-#   src/audio/pedals.json           the pedal and modulator catalog, read from the module itself
+#   src/services/audio-preview/wasm/drift-audio.mjs  Emscripten's loader for it
+#   src/core/audio/pedals.json           the pedal and modulator catalog, read from the module itself
 #   public/audio/build.json         what it was built from
 set -euo pipefail
 
@@ -21,8 +21,8 @@ emcmake cmake -S "$drift/wasm" -B "$build" -G Ninja "$@"
 cmake --build "$build"
 
 install -Dm644 "$build/drift-audio.wasm" "$forge/public/audio/drift-audio.wasm"
-install -Dm644 "$build/drift-audio.mjs" "$forge/src/audio/wasm/drift-audio.mjs"
-node "$forge/scripts/dump-pedals.mjs" > "$forge/src/audio/pedals.json"
+install -Dm644 "$build/drift-audio.mjs" "$forge/src/services/audio-preview/wasm/drift-audio.mjs"
+node "$forge/scripts/dump-pedals.mjs" > "$forge/src/core/audio/pedals.json"
 
 commit=$(git -C "$drift" rev-parse HEAD)
 [ -z "$(git -C "$drift" status --porcelain -- src/engine/audio wasm)" ] || commit="$commit-dirty"

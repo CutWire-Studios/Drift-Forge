@@ -91,9 +91,9 @@ code. Forge writes one of two shapes:
   measures tails itself) and `"nextFeatures"` listing `audio:graph`, plus `audio:modulation` and
   `audio:convolution` when used. Needs Drift 0.8.0 or newer, which the container's `minAppVersion`
   says. The schema is documented in Drift's `docs/custom-effects.md`; Forge builds it in
-  `src/audio/rack.ts` (`graphJson`).
+  `src/core/audio/rack.ts` (`graphJson`).
 
-The pedal catalog (`src/audio/pedals.json`) is generated from the Drift build by
+The pedal catalog (`src/core/audio/pedals.json`) is generated from the Drift build by
 `scripts/build-audio-wasm.sh`, so Forge only offers pedals Drift implements, and the preview runs
 Drift's own DSP compiled to WebAssembly. `src/__tests__/audio-golden.test.ts` checks the two agree,
 and Drift's `tests/tst_addonpackage.cpp` installs a Forge export (`scripts/make-drift-fixtures.ts`).

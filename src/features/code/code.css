@@ -1,0 +1,14 @@
+/* Code + export dialogs */
+
+.code-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.code-view {
+  height: min(56dvh, 520px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}

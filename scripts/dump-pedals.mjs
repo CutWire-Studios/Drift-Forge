@@ -1,6 +1,6 @@
 // Prints the pedal catalog compiled into public/audio/drift-audio.wasm, as pretty JSON.
 import { readFileSync } from "node:fs"
-import createDriftAudio from "../src/audio/wasm/drift-audio.mjs"
+import createDriftAudio from "../src/services/audio-preview/wasm/drift-audio.mjs"
 
 const module = await WebAssembly.compile(readFileSync(new URL("../public/audio/drift-audio.wasm", import.meta.url)))
 const M = await createDriftAudio({

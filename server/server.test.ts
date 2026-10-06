@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, mock } from "bun:test"
 import { Hono } from "hono"
-import { STARTERS } from "@/starters"
+import { STARTERS } from "@/core/starters"
 import { aiRoutes, type StreamEvent } from "./ai"
 import type { Auth } from "./auth"
 import { config } from "./config"

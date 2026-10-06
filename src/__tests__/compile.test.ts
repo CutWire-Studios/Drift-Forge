@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { compile, type CompileResult } from "@/compiler/compile"
-import { packageJson } from "@/compiler/manifest"
-import { paramNameProblem } from "@/compiler/validate"
-import { createNode } from "@/nodes/registry"
-import { STARTERS } from "@/starters"
+import { compile, type CompileResult } from "@/core/compiler/compile"
+import { packageJson } from "@/core/compiler/manifest"
+import { paramNameProblem } from "@/core/doc/naming"
+import { createNode } from "@/core/nodes/registry"
+import { STARTERS } from "@/core/starters"
 import { chain } from "./helpers"
 
 /** Every buffer read must have been written earlier and not overwritten since; no pass reads its own target. */

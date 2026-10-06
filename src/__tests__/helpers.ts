@@ -1,6 +1,6 @@
-import type { ForgeDoc, Kind } from "@/doc/types"
-import { emptyDoc, uid } from "@/doc/util"
-import { createNode, outputType } from "@/nodes/registry"
+import type { ForgeDoc, Kind } from "@/core/doc/types"
+import { emptyDoc, uid } from "@/core/doc/util"
+import { createNode, outputType } from "@/core/nodes/registry"
 
 /** A straight chain: source → types… → output, each linked through its first colour input. */
 export function chain(kind: Kind, types: string[]): ForgeDoc {
