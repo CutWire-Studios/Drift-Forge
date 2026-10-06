@@ -24,6 +24,11 @@ export default defineConfig({
   build: {
     target: "es2022",
   },
+  worker: {
+    // The default IIFE format rewrites import.meta.url (used by the Emscripten glue) to
+    // self.location.href, and AudioWorkletGlobalScope has no `self`.
+    format: "es",
+  },
   test: {
     environment: "node",
     // server/ runs on Bun (bun:sqlite) and has its own tests: `bun test server`.
