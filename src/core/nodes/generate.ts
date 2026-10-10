@@ -29,7 +29,10 @@ const SHAPE_SDF: Record<string, (s: string) => string> = {
     float sd = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);`,
   ring: (s) => `vec2 sz = max(${s}, vec2(0.0001));
     vec2 p = d / sz;
-    float sd = (abs(length(p) - 1.0) - 0.15) * min(sz.x, sz.y);`,
+    float k0 = length(p);
+    float k1 = length(d / (sz * sz));
+    float ellipse = k1 > 0.0001 ? k0 * (k0 - 1.0) / k1 : -min(sz.x, sz.y);
+    float sd = abs(ellipse) - 0.15 * min(sz.x, sz.y);`,
   diamond: (s) => `vec2 sz = max(${s}, vec2(0.0001));
     vec2 p = d / sz;
     float sd = (abs(p.x) + abs(p.y) - 1.0) * 0.7071 * min(sz.x, sz.y);`,
