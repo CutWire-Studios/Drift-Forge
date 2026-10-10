@@ -10,19 +10,42 @@ const center: InputDef = {
   widget: "point",
 }
 
+const size: InputDef = {
+  id: "size",
+  label: "Size",
+  type: "vec2",
+  default: [0.3, 0.3],
+  min: 0,
+  max: 2,
+  widget: "point",
+}
+
 /** Signed distance to each shape of size `s` around `d`, negative inside. */
 const SHAPE_SDF: Record<string, (s: string) => string> = {
-  circle: (s) => `float sd = length(d) - ${s};`,
-  box: (s) => `vec2 q = abs(d) - vec2(${s});
+  circle: (s) => `vec2 sz = max(${s}, vec2(0.0001));
+    vec2 p = d / sz;
+    float sd = (length(p) - 1.0) * min(sz.x, sz.y);`,
+  box: (s) => `vec2 q = abs(d) - ${s};
     float sd = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);`,
-  ring: (s) => `float sd = abs(length(d) - ${s}) - ${s} * 0.15;`,
-  diamond: (s) => `float sd = (abs(d.x) + abs(d.y) - ${s}) * 0.7071;`,
-  star: (s) => `float a = atan(d.x, -d.y);
+  ring: (s) => `vec2 sz = max(${s}, vec2(0.0001));
+    vec2 p = d / sz;
+    float k0 = length(p);
+    float k1 = length(d / (sz * sz));
+    float ellipse = k1 > 0.0001 ? k0 * (k0 - 1.0) / k1 : -min(sz.x, sz.y);
+    float sd = abs(ellipse) - 0.15 * min(sz.x, sz.y);`,
+  diamond: (s) => `vec2 sz = max(${s}, vec2(0.0001));
+    vec2 p = d / sz;
+    float sd = (abs(p.x) + abs(p.y) - 1.0) * 0.7071 * min(sz.x, sz.y);`,
+  star: (s) => `vec2 sz = max(${s}, vec2(0.0001));
+    vec2 p = d / sz;
+    float a = length(p) > 0.0 ? atan(p.x, -p.y) : 0.0;
     float seg = 6.2832 / 5.0;
     float k = abs(mod(a, seg) - seg * 0.5) / (seg * 0.5);
-    float sd = length(d) - ${s} * mix(0.45, 1.0, k * k);`,
-  heart: (s) => `vec2 h = vec2(abs(d.x), -d.y + ${s} * 0.25) / max(${s}, 0.0001);
-    float sd = (length(h - vec2(0.0, 0.25 * (1.0 + h.x))) - 0.75 + h.x * 0.35) * ${s};`,
+    float sd = (length(p) - mix(0.45, 1.0, k * k)) * min(sz.x, sz.y);`,
+  heart: (s) => `vec2 sz = max(${s}, vec2(0.0001));
+    vec2 p = d / sz;
+    vec2 h = vec2(abs(p.x), -p.y + 0.25);
+    float sd = (length(h - vec2(0.0, 0.25 * (1.0 + h.x))) - 0.75 + h.x * 0.35) * min(sz.x, sz.y);`,
 }
 
 const NOISE_FN: Record<string, HelperName> = { cloud: "fbm", smooth: "valueNoise" }
@@ -120,7 +143,7 @@ export const generateNodes: NodeDef[] = [
     description: "A circle, box, ring, diamond or star. Outputs a mask: 1 inside, 0 outside.",
     inputs: [
       center,
-      { id: "size", label: "Size", type: "float", default: 0.3, min: 0, max: 2 },
+      size,
       { id: "softness", label: "Softness", type: "float", default: 0.01, min: 0, max: 0.5 },
       { id: "rotation", label: "Rotation", type: "float", default: 0, min: -360, max: 360, widget: "angle" },
     ],
