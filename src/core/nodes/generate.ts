@@ -43,9 +43,12 @@ const SHAPE_SDF: Record<string, (s: string) => string> = {
     float k = abs(mod(a, seg) - seg * 0.5) / (seg * 0.5);
     float sd = (length(p) - mix(0.45, 1.0, k * k)) * min(sz.x, sz.y);`,
   heart: (s) => `vec2 sz = max(${s}, vec2(0.0001));
-    vec2 p = d / sz;
-    vec2 h = vec2(abs(p.x), -p.y + 0.25);
-    float sd = (length(h - vec2(0.0, 0.25 * (1.0 + h.x))) - 0.75 + h.x * 0.35) * min(sz.x, sz.y);`,
+    float scale = 2.0;
+    vec2 p = d / (sz * scale);    
+    float x = abs(p.x);
+    float k = 1.35;
+    vec2 q = vec2(x, (0.74656 - p.y) / 0.55 - 1.25 * (1.0 + k * x - x * x));
+    float sd = (length(q) + 0.35 * x - 0.75) * min(sz.x, sz.y);`,
 }
 
 const NOISE_FN: Record<string, HelperName> = { cloud: "fbm", smooth: "valueNoise" }
